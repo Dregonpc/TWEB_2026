@@ -1,4 +1,4 @@
-package tweb.wellnesstracker.server.config;
+package tweb.wellnesstracker.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

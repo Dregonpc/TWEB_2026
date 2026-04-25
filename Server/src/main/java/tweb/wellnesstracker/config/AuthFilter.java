@@ -1,4 +1,4 @@
-package tweb.wellnesstracker.server.config;
+package tweb.wellnesstracker.config;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
