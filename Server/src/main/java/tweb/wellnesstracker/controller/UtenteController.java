@@ -1,4 +1,4 @@
-package tweb.wellnesstracker.server.controller;
+package tweb.wellnesstracker.controller;
 
 import jakarta.servlet.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,27 +16,25 @@ public class UtenteController {
     @Autowired
     private UtenteService utenteService;
 
-    // GET /api/utenti/atleti
-    // COACH e PSICOLOGO vedono la lista di tutti gli utenti USER
+    // GET /api/utenti/atleti — lista utenti USER, accessibile a COACH e PSICOLOGO
     @GetMapping("/atleti")
     public ResponseEntity<?> getAtleti(HttpServletRequest request) {
         Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"COACH".equals(loggato.getRuolo()) && !"PSICOLOGO".equals(loggato.getRuolo())) {
+        if (!"COACH".equals(loggato.getRuolo()) && !"PSICOLOGO".equals(loggato.getRuolo()))
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("{\"errore\": \"Accesso non consentito\"}");
-        }
+
         return ResponseEntity.ok(utenteService.getAtletiPerRuolo("USER"));
     }
 
     // GET /api/utenti/profilo/{username}
-    // Recupera il profilo di un utente per username
     @GetMapping("/profilo/{username}")
     public ResponseEntity<?> getProfilo(@PathVariable String username) {
         Utente u = utenteService.getUtenteByUsername(username);
-        if (u == null) {
+        if (u == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("{\"errore\": \"Utente non trovato\"}");
-        }
+
         return ResponseEntity.ok(u);
     }
 }

@@ -1,4 +1,4 @@
-package tweb.wellnesstracker.server.controller;
+package tweb.wellnesstracker.controller;
 
 import jakarta.servlet.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,42 +17,34 @@ public class BenessereController {
     private BenessereService benessereService;
 
     // GET /api/benessere/storico?utenteId=1
-    // Recupera tutti i log di benessere di un utente
     @GetMapping("/storico")
     public ResponseEntity<List<LogBenessere>> getStorico(@RequestParam Long utenteId) {
-        return ResponseEntity.ok(benessereService.getStoricoUtente(utenteId));
+        return ResponseEntity.ok(benessereService.getStoricoBenessere(utenteId));
     }
 
-    // POST /api/benessere/log
-    // L'utente salva un nuovo log di benessere (umore, sonno, stress, diario)
+    // POST /api/benessere/log — salva un nuovo log, associandolo all'utente in sessione
     @PostMapping("/log")
-    public ResponseEntity<LogBenessere> salvaLog(
-            @RequestBody LogBenessere log,
-            HttpServletRequest request) {
-
+    public ResponseEntity<LogBenessere> salvaLog(@RequestBody LogBenessere log,
+                                                 HttpServletRequest request) {
         Utente utente = (Utente) request.getSession().getAttribute("utente");
         log.setUtente(utente);
-        return ResponseEntity.ok(benessereService.salvaLog(log));
+        return ResponseEntity.ok(benessereService.salvaLogBenessere(log));
     }
 
-    // POST /api/benessere/commento
-    // Lo psicologo lascia un commento su un log di benessere
+    // POST /api/benessere/commento — solo PSICOLOGO
     @PostMapping("/commento")
-    public ResponseEntity<?> aggiungiCommento(
-            @RequestBody CommentoBenessere commento,
-            HttpServletRequest request) {
-
+    public ResponseEntity<?> aggiungiCommento(@RequestBody CommentoBenessere commento,
+                                              HttpServletRequest request) {
         Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"PSICOLOGO".equals(loggato.getRuolo())) {
+        if (!"PSICOLOGO".equals(loggato.getRuolo()))
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("{\"errore\": \"Accesso riservato agli PSICOLOGO\"}");
-        }
+
         commento.setPsicologo(loggato);
-        return ResponseEntity.ok(benessereService.aggiungiCommento(commento));
+        return ResponseEntity.ok(benessereService.aggiungiCommentoPsicologo(commento));
     }
 
     // GET /api/benessere/commenti/{logId}
-    // Recupera i commenti dello psicologo su un log specifico
     @GetMapping("/commenti/{logId}")
     public ResponseEntity<List<CommentoBenessere>> getCommenti(@PathVariable Long logId) {
         return ResponseEntity.ok(benessereService.getCommentiLog(logId));

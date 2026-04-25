@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 @Service
 public class AllenamentoService {
 
-    // --- Dependency injection ---
     @Autowired
     private LogAllenamentoRepository logRepository;
 
@@ -26,7 +25,7 @@ public class AllenamentoService {
     @Autowired
     private CommentoAllenamentoRepository commentoRepository;
 
-    // --- LATO UTENTE ---
+    // Salva il log e i relativi esercizi in una singola transazione
     @Transactional
     public LogAllenamento salvaAllenamento(LogAllenamento log, List<EsercizioSvolto> esercizi) {
         LogAllenamento salvato = logRepository.save(log);
@@ -41,11 +40,11 @@ public class AllenamentoService {
         return logRepository.findByUtenteIdOrderByDataDesc(utenteId);
     }
 
-    // --- LATO COACH ---
+    // Filtra lo storico tenendo solo gli ultimi 7 giorni
     public List<LogAllenamento> getUltimi7Giorni(Long utenteId) {
         LocalDate unaSettimanaFa = LocalDate.now().minusDays(7);
         return logRepository.findByUtenteIdOrderByDataDesc(utenteId).stream()
-                .filter(l -> l.getData().isAfter(unaSettimanaFa) || l.getData().isEqual(unaSettimanaFa))
+                .filter(l -> !l.getData().isBefore(unaSettimanaFa))
                 .collect(Collectors.toList());
     }
 
@@ -55,5 +54,14 @@ public class AllenamentoService {
 
     public CommentoAllenamento aggiungiCommento(CommentoAllenamento commento) {
         return commentoRepository.save(commento);
+    }
+
+    // Metodi usati dai controller
+    public List<SchedaAllenamento> getSchedeUtente(Long utenteId) {
+        return schedaRepository.findByUtenteId(utenteId);
+    }
+
+    public List<CommentoAllenamento> getCommentiLog(Long logId) {
+        return commentoRepository.findByLogAllenamentoId(logId);
     }
 }

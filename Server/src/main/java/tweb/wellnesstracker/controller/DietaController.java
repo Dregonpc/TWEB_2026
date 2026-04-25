@@ -1,4 +1,4 @@
-package tweb.wellnesstracker.server.controller;
+package tweb.wellnesstracker.controller;
 
 import jakarta.servlet.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,24 +17,20 @@ public class DietaController {
     private DietaService dietaService;
 
     // GET /api/dieta/utente/{utenteId}
-    // Recupera tutte le diete assegnate a un utente
     @GetMapping("/utente/{utenteId}")
     public ResponseEntity<List<Dieta>> getDieteUtente(@PathVariable Long utenteId) {
         return ResponseEntity.ok(dietaService.getDieteUtente(utenteId));
     }
 
-    // POST /api/dieta
-    // Il coach crea una nuova dieta per un atleta
+    // POST /api/dieta — solo COACH
     @PostMapping
-    public ResponseEntity<?> creaDieta(
-            @RequestBody Dieta dieta,
-            HttpServletRequest request) {
-
+    public ResponseEntity<?> creaDieta(@RequestBody Dieta dieta,
+                                       HttpServletRequest request) {
         Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"COACH".equals(loggato.getRuolo())) {
+        if (!"COACH".equals(loggato.getRuolo()))
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("{\"errore\": \"Accesso riservato ai COACH\"}");
-        }
+
         dieta.setCoach(loggato);
         return ResponseEntity.ok(dietaService.creaDieta(dieta));
     }

@@ -10,7 +10,6 @@ import java.util.List;
 @Service
 public class BenessereService {
 
-    // --- Dependency injection ---
     @Autowired
     private LogBenessereRepository benessereRepository;
 
@@ -27,5 +26,10 @@ public class BenessereService {
 
     public CommentoBenessere aggiungiCommentoPsicologo(CommentoBenessere commento) {
         return commentoRepository.save(commento);
+    }
+
+    // Metodo usato dal controller
+    public List<CommentoBenessere> getCommentiLog(Long logId) {
+        return commentoRepository.findByLogBenessereId(logId);
     }
 }

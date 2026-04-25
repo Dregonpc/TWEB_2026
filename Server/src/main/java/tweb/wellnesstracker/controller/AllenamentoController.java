@@ -1,4 +1,4 @@
-package tweb.wellnesstracker.server.controller;
+package tweb.wellnesstracker.controller;
 
 import jakarta.servlet.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,80 +17,65 @@ public class AllenamentoController {
     private AllenamentoService allenamentoService;
 
     // GET /api/allenamento/storico?utenteId=1
-    // Restituisce tutti i log di allenamento di un utente
     @GetMapping("/storico")
     public ResponseEntity<List<LogAllenamento>> getStorico(@RequestParam Long utenteId) {
         return ResponseEntity.ok(allenamentoService.getStoricoUtente(utenteId));
     }
 
-    // POST /api/allenamento/log
-    // L'utente salva un nuovo allenamento con i suoi esercizi
+    // POST /api/allenamento/log — salva un nuovo log, associandolo all'utente in sessione
     @PostMapping("/log")
-    public ResponseEntity<LogAllenamento> salvaLog(
-            @RequestBody LogAllenamento log,
-            HttpServletRequest request) {
-
+    public ResponseEntity<LogAllenamento> salvaLog(@RequestBody LogAllenamento log,
+                                                   HttpServletRequest request) {
         Utente utente = (Utente) request.getSession().getAttribute("utente");
         log.setUtente(utente);
-        return ResponseEntity.ok(allenamentoService.salvaAllenamento(log, log.getEsercizi()));
+        return ResponseEntity.ok(allenamentoService.salvaAllenamento(log, List.of()));
     }
 
-    // GET /api/allenamento/ultimi7?utenteId=1
-    // Il coach vede gli allenamenti degli ultimi 7 giorni di un atleta
+    // GET /api/allenamento/ultimi7?utenteId=1 — solo COACH
     @GetMapping("/ultimi7")
-    public ResponseEntity<?> getUltimi7(
-            @RequestParam Long utenteId,
-            HttpServletRequest request) {
-
+    public ResponseEntity<?> getUltimi7(@RequestParam Long utenteId,
+                                        HttpServletRequest request) {
         Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"COACH".equals(loggato.getRuolo())) {
+        if (!"COACH".equals(loggato.getRuolo()))
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("{\"errore\": \"Accesso riservato ai COACH\"}");
-        }
+
         return ResponseEntity.ok(allenamentoService.getUltimi7Giorni(utenteId));
     }
 
     // GET /api/allenamento/schede/{utenteId}
-    // Recupera le schede di allenamento assegnate a un utente
     @GetMapping("/schede/{utenteId}")
     public ResponseEntity<List<SchedaAllenamento>> getSchede(@PathVariable Long utenteId) {
         return ResponseEntity.ok(allenamentoService.getSchedeUtente(utenteId));
     }
 
-    // POST /api/allenamento/scheda
-    // Il coach crea una nuova scheda di allenamento per un atleta
+    // POST /api/allenamento/scheda — solo COACH
     @PostMapping("/scheda")
-    public ResponseEntity<?> creaScheda(
-            @RequestBody SchedaAllenamento scheda,
-            HttpServletRequest request) {
-
+    public ResponseEntity<?> creaScheda(@RequestBody SchedaAllenamento scheda,
+                                        HttpServletRequest request) {
         Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"COACH".equals(loggato.getRuolo())) {
+        if (!"COACH".equals(loggato.getRuolo()))
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("{\"errore\": \"Accesso riservato ai COACH\"}");
-        }
+
         scheda.setCoach(loggato);
         return ResponseEntity.ok(allenamentoService.creaScheda(scheda));
     }
 
-    // POST /api/allenamento/commento
-    // Il coach lascia un commento su un log di allenamento
+    // POST /api/allenamento/commento — solo COACH
     @PostMapping("/commento")
-    public ResponseEntity<?> aggiungiCommento(
-            @RequestBody CommentoAllenamento commento,
-            HttpServletRequest request) {
-
+    public ResponseEntity<?> aggiungiCommento(@RequestBody CommentoAllenamento commento,
+                                              HttpServletRequest request) {
         Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"COACH".equals(loggato.getRuolo())) {
+        if (!"COACH".equals(loggato.getRuolo()))
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("{\"errore\": \"Accesso riservato ai COACH\"}");
-        }
+
         commento.setCoach(loggato);
         return ResponseEntity.ok(allenamentoService.aggiungiCommento(commento));
     }
 
     // GET /api/allenamento/commenti/{logId}
-    // Recupera i commenti del coach su un log specifico
     @GetMapping("/commenti/{logId}")
     public ResponseEntity<List<CommentoAllenamento>> getCommenti(@PathVariable Long logId) {
         return ResponseEntity.ok(allenamentoService.getCommentiLog(logId));
