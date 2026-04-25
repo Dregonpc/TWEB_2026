@@ -3,6 +3,7 @@ package tweb.wellnesstracker.server.config;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.core.annotation.Order;
 
 import java.io.IOException;
 
