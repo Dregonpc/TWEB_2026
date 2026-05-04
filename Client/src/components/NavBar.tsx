@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LogOut } from 'lucide-react';
 
 export default function NavBar() {
     const { utente, logout } = useAuth();
@@ -106,10 +107,10 @@ export default function NavBar() {
                     {/* Bottone logout visibile solo su desktop */}
                     <button
                         onClick={handleLogout}
-                        className="hidden md:block text-sm bg-green-700 hover:bg-green-600
+                        className="hidden md:block text-sm bg-red-500 hover:bg-red-300
                        px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                     >
-                        Esci
+                        <LogOut className="w-4 h-4" />
                     </button>
 
                     {/* Bottone hamburger visibile solo su mobile */}
@@ -148,21 +149,21 @@ export default function NavBar() {
 
                         {/* Info utente nel menu mobile */}
                         <div className="flex items-center gap-2 py-2">
-              <span className="text-sm text-green-100">
-                {utente?.nome} {utente?.cognome}
-              </span>
+                            <span className="text-sm text-green-100">
+                                {utente?.nome} {utente?.cognome}
+                            </span>
                             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ruoloBadge[utente?.ruolo ?? 'USER']}`}>
-                {utente?.ruolo}
-              </span>
+                                {utente?.ruolo}
+                            </span>
                         </div>
 
                         {/* Bottone logout mobile */}
                         <button
                             onClick={handleLogout}
-                            className="w-full text-left text-sm text-red-300 hover:text-red-200
-                         py-2 transition-colors cursor-pointer"
+                            className=" text-left text-sm px-3 py-2 rounded-lg bg-red-500
+                                        transition-colors cursor-pointer"
                         >
-                            Esci →
+                            <LogOut className="w-4 h-4 red" />
                         </button>
                     </div>
                 </div>

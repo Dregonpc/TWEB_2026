@@ -17,7 +17,7 @@ public class LoginController {
     @Autowired
     private UtenteService utenteService;
 
-    // POST /session — login: verifica credenziali e crea la sessione
+    // POST /session - login: verifica credenziali e crea la sessione
     @PostMapping
     public ResponseEntity<?> login(@RequestBody Map<String, String> body,
                                    HttpServletRequest request) {
@@ -30,22 +30,35 @@ public class LoginController {
                     .body("{\"errore\": \"Credenziali errate\"}");
         }
 
-        // Crea la sessione e salva l'utente — genera il cookie JSESSIONID
+        // invalida sessione precedente prima di crearne una nuova
+        HttpSession oldSession = request.getSession(false);
+        if (oldSession != null) oldSession.invalidate();
+
+        // Crea la sessione e salva l'utente - genera il cookie LABSESSIONCOOKIE
         HttpSession session = request.getSession(true);
         session.setAttribute("utente", utente.get());
         return ResponseEntity.ok(utente.get());
     }
 
-    // DELETE /session — logout: invalida la sessione
+    // DELETE /session - logout
     @DeleteMapping
-    public ResponseEntity<?> logout(HttpServletRequest request) {
-        // getSession(false): non crea una nuova sessione se non esiste
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response)
+    {
         HttpSession session = request.getSession(false);
+
         if (session != null) session.invalidate();
+
+        // cancella il cookie LABSESSIONCOOKIE nel browser
+        Cookie cookie = new Cookie("LABSESSIONCOOKIE", "");
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+
         return ResponseEntity.ok("{\"messaggio\": \"Logout effettuato\"}");
     }
 
-    // GET /session — restituisce l'utente loggato (usato da React al caricamento)
+    // GET /session - restituisce l'utente loggato (usato da React al caricamento)
     @GetMapping
     public ResponseEntity<?> me(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
