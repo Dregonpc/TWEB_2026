@@ -32,7 +32,7 @@ export async function logout(): Promise<void> {
 
 // Recupera l'utente attualmente loggato (utile al refresh della pagina)
 export async function getMe(): Promise<Utente | null> {
-    const res = await fetch(`${BASE_URL}/me`, {
+    const res = await fetch(`${BASE_URL}/session`, {
         credentials: 'include',
     });
 
