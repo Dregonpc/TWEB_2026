@@ -3,12 +3,13 @@ import type { ReactNode } from 'react';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import LogAllenamentoPage from './pages/LogAllenamentoPage';
 
-// PrivateRoute
+// PrivateRoute: blocca l'accesso se non loggato o ruolo non consentito
 function PrivateRoute({
-                          children,
-                          ruoliConsentiti,
-                      }: {
+    children,
+    ruoliConsentiti,
+}: {
     children: ReactNode;
     ruoliConsentiti?: string[];
 }) {
@@ -38,12 +39,25 @@ export default function App() {
             {/* Rotta pubblica */}
             <Route path="/login" element={<LoginPage />} />
 
+            {/* Redirect radice */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
             {/* Dashboard — tutti i ruoli */}
             <Route
                 path="/dashboard"
                 element={
                     <PrivateRoute>
                         <DashboardPage />
+                    </PrivateRoute>
+                }
+            />
+
+            {/* USER */}
+            <Route
+                path="/log-allenamento"
+                element={
+                    <PrivateRoute ruoliConsentiti={['USER']}>
+                        <LogAllenamentoPage />
                     </PrivateRoute>
                 }
             />

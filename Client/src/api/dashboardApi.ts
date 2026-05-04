@@ -4,12 +4,12 @@ import type { SchedaAllenamento } from '../types/SchedaAllenamento';
 import type { Dieta } from '../types/Dieta';
 import type { Utente } from '../types/Utente';
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'http://localhost:8080/api';
 
 // USER
 
 export async function getLogAllenamento(): Promise<LogAllenamento[]> {
-    const res = await fetch(`${BASE_URL}/allenamento/log`, { credentials: 'include' });
+    const res = await fetch(`${BASE_URL}/allenamento/storico`, { credentials: 'include' });
     if (!res.ok) throw new Error('Errore nel recupero log allenamento');
     return await res.json() as LogAllenamento[];
 }

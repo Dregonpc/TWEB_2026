@@ -16,10 +16,19 @@ public class AllenamentoController {
     @Autowired
     private AllenamentoService allenamentoService;
 
-    // GET /api/allenamento/storico?utenteId=1
+    // GET /api/allenamento/storico
     @GetMapping("/storico")
-    public ResponseEntity<List<LogAllenamento>> getStorico(@RequestParam Long utenteId) {
-        return ResponseEntity.ok(allenamentoService.getStoricoUtente(utenteId));
+    public ResponseEntity<List<LogAllenamento>> getStorico(HttpServletRequest request) {
+        // Recuperiamo l'utente che il LoginController ha salvato in sessione
+        Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (utenteLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<LogAllenamento> storico = allenamentoService.getStoricoUtente(utenteLoggato.getId());
+        return ResponseEntity.ok(storico);
     }
 
     // POST /api/allenamento/log — salva un nuovo log, associandolo all'utente in sessione
@@ -43,10 +52,18 @@ public class AllenamentoController {
         return ResponseEntity.ok(allenamentoService.getUltimi7Giorni(utenteId));
     }
 
-    // GET /api/allenamento/schede/{utenteId}
-    @GetMapping("/schede/{utenteId}")
-    public ResponseEntity<List<SchedaAllenamento>> getSchede(@PathVariable Long utenteId) {
-        return ResponseEntity.ok(allenamentoService.getSchedeUtente(utenteId));
+    // GET /api/allenamento/schede
+    @GetMapping("/schede")
+    public ResponseEntity<List<SchedaAllenamento>> getSchede(HttpServletRequest request) {
+        // Recuperiamo l'utente che il LoginController ha salvato in sessione
+        Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (utenteLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(allenamentoService.getSchedeUtente(utenteLoggato.getId()));
     }
 
     // POST /api/allenamento/scheda — solo COACH
