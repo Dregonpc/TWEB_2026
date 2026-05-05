@@ -23,9 +23,12 @@ public class AllenamentoService {
     private SchedaAllenamentoRepository schedaRepository;
 
     @Autowired
+    private EsercizioSchedaRepository esercizioSchedaRepository;
+
+    @Autowired
     private CommentoAllenamentoRepository commentoRepository;
 
-    // Salva il log e i relativi esercizi in una singola transazione
+    // Salva l'allenamento di un utente
     @Transactional
     public LogAllenamento salvaAllenamento(LogAllenamento log, List<EsercizioSvolto> esercizi) {
         LogAllenamento salvato = logRepository.save(log);
@@ -36,6 +39,7 @@ public class AllenamentoService {
         return salvato;
     }
 
+    // Ritorna tutti gli allenamenti di un utente
     public List<LogAllenamento> getStoricoUtente(Long utenteId) {
         return logRepository.findByUtenteIdOrderByDataDesc(utenteId);
     }
@@ -48,19 +52,37 @@ public class AllenamentoService {
                 .collect(Collectors.toList());
     }
 
+    // Salva scheda di allenamento
     public SchedaAllenamento creaScheda(SchedaAllenamento scheda) {
         return schedaRepository.save(scheda);
     }
 
-    public CommentoAllenamento aggiungiCommento(CommentoAllenamento commento) {
-        return commentoRepository.save(commento);
-    }
-
-    // Metodi usati dai controller
+    // Ritorna tutte le schede di un utente
     public List<SchedaAllenamento> getSchedeUtente(Long utenteId) {
         return schedaRepository.findByUtenteId(utenteId);
     }
 
+    // Ritorna tutte le schede che ha creato un coach
+    public List<SchedaAllenamento> getSchedeCoach(Long coachId) {
+        return schedaRepository.findByCoachId(coachId);
+    }
+
+    // Salva un esercizio per una scheda
+    public EsercizioScheda salvaEsercizioScheda(EsercizioScheda e) {
+        return esercizioSchedaRepository.save(e);
+    }
+
+    // Ritorna l'elenco degli esercizi di una scheda
+    public List<EsercizioScheda> getEserciziByScheda(Long schedaId) {
+        return esercizioSchedaRepository.findBySchedaAllenamentoId(schedaId);
+    }
+
+    // Salva un commento per un allenamento
+    public CommentoAllenamento aggiungiCommento(CommentoAllenamento commento) {
+        return commentoRepository.save(commento);
+    }
+
+    // Ritorna tutti i commenti di un allenamento
     public List<CommentoAllenamento> getCommentiLog(Long logId) {
         return commentoRepository.findByLogAllenamentoId(logId);
     }
