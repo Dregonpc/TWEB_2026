@@ -24,23 +24,32 @@ public class BenessereController {
 
     // POST /api/benessere/log — salva un nuovo log, associandolo all'utente in sessione
     @PostMapping("/log")
-    public ResponseEntity<LogBenessere> salvaLog(@RequestBody LogBenessere log,
-                                                 HttpServletRequest request) {
-        Utente utente = (Utente) request.getSession().getAttribute("utente");
-        log.setUtente(utente);
+    public ResponseEntity<LogBenessere> salvaLog(@RequestBody LogBenessere log, HttpServletRequest request) {
+        Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (utenteLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        log.setUtente(utenteLoggato);
         return ResponseEntity.ok(benessereService.salvaLogBenessere(log));
     }
 
     // POST /api/benessere/commento — solo PSICOLOGO
     @PostMapping("/commento")
-    public ResponseEntity<?> aggiungiCommento(@RequestBody CommentoBenessere commento,
-                                              HttpServletRequest request) {
-        Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"PSICOLOGO".equals(loggato.getRuolo()))
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("{\"errore\": \"Accesso riservato agli PSICOLOGO\"}");
+    public ResponseEntity<?> aggiungiCommento(@RequestBody CommentoBenessere commento, HttpServletRequest request) {
+        Utente psicologoLoggato = (Utente) request.getSession().getAttribute("utente");
 
-        commento.setPsicologo(loggato);
+        if (psicologoLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!"PSICOLOGO".equals(psicologoLoggato.getRuolo()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Accesso riservato agli PSICOLOGO\"}");
+
+        commento.setPsicologo(psicologoLoggato);
         return ResponseEntity.ok(benessereService.aggiungiCommentoPsicologo(commento));
     }
 

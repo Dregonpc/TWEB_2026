@@ -16,8 +16,7 @@ public class UtenteService {
 
     // Tentativo di login
     public Optional<Utente> login(String username, String password) {
-        return utenteRepository.findByUsername(username)
-                .filter(u -> u.getPassword().equals(password));
+        return utenteRepository.findByUsername(username).filter(u -> u.getPassword().equals(password));
     }
 
     // Ritorna l'utente in base allo username

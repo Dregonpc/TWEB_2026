@@ -16,22 +16,33 @@ public class DietaController {
     @Autowired
     private DietaService dietaService;
 
-    // GET /api/dieta/utente/{utenteId}
-    @GetMapping("/utente/{utenteId}")
-    public ResponseEntity<List<Dieta>> getDieteUtente(@PathVariable Long utenteId) {
-        return ResponseEntity.ok(dietaService.getDieteUtente(utenteId));
+    // GET /api/dieta/utente
+    @GetMapping("/utente")
+    public ResponseEntity<List<Dieta>> getDieteUtente(HttpServletRequest request) {
+        Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (utenteLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(dietaService.getDieteUtente(utenteLoggato.getId()));
     }
 
-    // POST /api/dieta — solo COACH
-    @PostMapping
-    public ResponseEntity<?> creaDieta(@RequestBody Dieta dieta,
-                                       HttpServletRequest request) {
-        Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"COACH".equals(loggato.getRuolo()))
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("{\"errore\": \"Accesso riservato ai COACH\"}");
+    // POST /api/dieta/aggiungiDieta — solo COACH
+    @PostMapping("/aggiungiDieta")
+    public ResponseEntity<?> creaDieta(@RequestBody Dieta dieta, HttpServletRequest request) {
+        Utente coachLoggato = (Utente) request.getSession().getAttribute("utente");
 
-        dieta.setCoach(loggato);
+        if (coachLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!"COACH".equals(coachLoggato.getRuolo()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Accesso riservato ai COACH\"}");
+
+        dieta.setCoach(coachLoggato);
         return ResponseEntity.ok(dietaService.creaDieta(dieta));
     }
 }

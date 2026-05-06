@@ -19,20 +19,19 @@ public class LoginController {
 
     // POST /session - login: verifica credenziali e crea la sessione
     @PostMapping
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body,
-                                   HttpServletRequest request) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> body, HttpServletRequest request) {
         String username = body.get("username");
         String password = body.get("password");
 
         Optional<Utente> utente = utenteService.login(username, password);
         if (utente.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("{\"errore\": \"Credenziali errate\"}");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"errore\": \"Credenziali errate\"}");
         }
 
         // invalida sessione precedente prima di crearne una nuova
         HttpSession oldSession = request.getSession(false);
-        if (oldSession != null) oldSession.invalidate();
+        if (oldSession != null)
+            oldSession.invalidate();
 
         // Crea la sessione e salva l'utente - genera il cookie LABSESSIONCOOKIE
         HttpSession session = request.getSession(true);
@@ -46,7 +45,8 @@ public class LoginController {
     {
         HttpSession session = request.getSession(false);
 
-        if (session != null) session.invalidate();
+        if (session != null)
+            session.invalidate();
 
         // cancella il cookie LABSESSIONCOOKIE nel browser
         Cookie cookie = new Cookie("LABSESSIONCOOKIE", "");
@@ -62,10 +62,11 @@ public class LoginController {
     @GetMapping
     public ResponseEntity<?> me(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
+
         if (session == null || session.getAttribute("utente") == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("{\"errore\": \"Nessun utente loggato\"}");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"errore\": \"Nessun utente loggato\"}");
         }
+
         return ResponseEntity.ok(session.getAttribute("utente"));
     }
 }

@@ -19,7 +19,6 @@ public class AllenamentoController {
     // GET /api/allenamento/storico
     @GetMapping("/storico")
     public ResponseEntity<List<LogAllenamento>> getStorico(HttpServletRequest request) {
-        // Recuperiamo l'utente che il LoginController ha salvato in sessione
         Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
 
         if (utenteLoggato == null) {
@@ -33,29 +32,21 @@ public class AllenamentoController {
 
     // POST /api/allenamento/log — salva un nuovo log, associandolo all'utente in sessione
     @PostMapping("/log")
-    public ResponseEntity<LogAllenamento> salvaLog(@RequestBody LogAllenamento log,
-                                                   HttpServletRequest request) {
-        Utente utente = (Utente) request.getSession().getAttribute("utente");
-        log.setUtente(utente);
+    public ResponseEntity<LogAllenamento> salvaLog(@RequestBody LogAllenamento log, HttpServletRequest request) {
+        Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (utenteLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        log.setUtente(utenteLoggato);
         return ResponseEntity.ok(allenamentoService.salvaAllenamento(log, List.of()));
     }
 
-    // GET /api/allenamento/ultimi7?utenteId=1 — solo COACH
-    @GetMapping("/ultimi7")
-    public ResponseEntity<?> getUltimi7(@RequestParam Long utenteId,
-                                        HttpServletRequest request) {
-        Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"COACH".equals(loggato.getRuolo()))
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("{\"errore\": \"Accesso riservato ai COACH\"}");
-
-        return ResponseEntity.ok(allenamentoService.getUltimi7Giorni(utenteId));
-    }
-
-    // GET /api/allenamento/schede
-    @GetMapping("/schede")
+    // GET /api/allenamento/schedeUtente
+    @GetMapping("/schedeUtente")
     public ResponseEntity<List<SchedaAllenamento>> getSchede(HttpServletRequest request) {
-        // Recuperiamo l'utente che il LoginController ha salvato in sessione
         Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
 
         if (utenteLoggato == null) {
@@ -66,35 +57,98 @@ public class AllenamentoController {
         return ResponseEntity.ok(allenamentoService.getSchedeUtente(utenteLoggato.getId()));
     }
 
-    // POST /api/allenamento/scheda — solo COACH
-    @PostMapping("/scheda")
-    public ResponseEntity<?> creaScheda(@RequestBody SchedaAllenamento scheda,
-                                        HttpServletRequest request) {
-        Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"COACH".equals(loggato.getRuolo()))
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("{\"errore\": \"Accesso riservato ai COACH\"}");
-
-        scheda.setCoach(loggato);
-        return ResponseEntity.ok(allenamentoService.creaScheda(scheda));
-    }
-
-    // POST /api/allenamento/commento — solo COACH
-    @PostMapping("/commento")
-    public ResponseEntity<?> aggiungiCommento(@RequestBody CommentoAllenamento commento,
-                                              HttpServletRequest request) {
-        Utente loggato = (Utente) request.getSession().getAttribute("utente");
-        if (!"COACH".equals(loggato.getRuolo()))
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("{\"errore\": \"Accesso riservato ai COACH\"}");
-
-        commento.setCoach(loggato);
-        return ResponseEntity.ok(allenamentoService.aggiungiCommento(commento));
+    // GET /api/allenamento/eseriziScheda/{schedaId}
+    @GetMapping("/eseriziScheda/{schedaId}")
+    public ResponseEntity<List<EsercizioScheda>> getEsercizi(@PathVariable Long schedaId) {
+        return ResponseEntity.ok(allenamentoService.getEserciziByScheda(schedaId));
     }
 
     // GET /api/allenamento/commenti/{logId}
     @GetMapping("/commenti/{logId}")
     public ResponseEntity<List<CommentoAllenamento>> getCommenti(@PathVariable Long logId) {
         return ResponseEntity.ok(allenamentoService.getCommentiLog(logId));
+    }
+
+    // GET /api/allenamento/ultimi7?utenteId=1 — solo COACH
+    @GetMapping("/ultimi7")
+    public ResponseEntity<?> getUltimi7(@RequestParam Long utenteId, HttpServletRequest request) {
+        Utente coachLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (coachLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!"COACH".equals(coachLoggato.getRuolo()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Accesso riservato ai COACH\"}");
+
+        return ResponseEntity.ok(allenamentoService.getUltimi7Giorni(utenteId));
+    }
+
+    // GET /api/allenamento/schedeCoach — solo COACH
+    @GetMapping("/schedeCoach")
+    public ResponseEntity<?> getSchedeCoach(HttpServletRequest request) {
+        Utente coachLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (coachLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!"COACH".equals(coachLoggato.getRuolo()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Accesso riservato ai COACH\"}");
+
+        return ResponseEntity.ok(allenamentoService.getSchedeCoach(coachLoggato.getId()));
+    }
+
+    // POST /api/allenamento/nuovoEsercizioScheda — solo COACH
+    @PostMapping("/nuovoEsercizioScheda")
+    public ResponseEntity<?> creaEsercizioScheda(@RequestBody EsercizioScheda esercizio, HttpServletRequest request) {
+        Utente coachLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (coachLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!"COACH".equals(coachLoggato.getRuolo()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Accesso riservato ai COACH\"}");
+
+        // ?? dobbiamo settare la scheda allenamento oppure è già salvato in esercizio
+        return ResponseEntity.ok(allenamentoService.salvaEsercizioScheda(esercizio));
+    }
+
+    // POST /api/allenamento/nuovaScheda — solo COACH
+    @PostMapping("/nuovaScheda")
+    public ResponseEntity<?> creaScheda(@RequestBody SchedaAllenamento scheda, HttpServletRequest request) {
+        Utente coachLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (coachLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!"COACH".equals(coachLoggato.getRuolo()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Accesso riservato ai COACH\"}");
+
+        scheda.setCoach(coachLoggato);
+        return ResponseEntity.ok(allenamentoService.creaScheda(scheda));
+    }
+
+    // POST /api/allenamento/nuovoCommento — solo COACH
+    @PostMapping("/nuovoCommento")
+    public ResponseEntity<?> aggiungiCommento(@RequestBody CommentoAllenamento commento, HttpServletRequest request) {
+        Utente coachLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (coachLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!"COACH".equals(coachLoggato.getRuolo()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Accesso riservato ai COACH\"}");
+
+        commento.setCoach(coachLoggato);
+        return ResponseEntity.ok(allenamentoService.aggiungiCommento(commento));
     }
 }
