@@ -11,20 +11,22 @@ import java.util.Optional;
 @Service
 public class UtenteService {
 
-    // --- Dependency injection ---
     @Autowired
     private UtenteRepository utenteRepository;
 
+    // Tentativo di login
     public Optional<Utente> login(String username, String password) {
         return utenteRepository.findByUsername(username)
                 .filter(u -> u.getPassword().equals(password));
     }
 
+    // Ritorna l'utente in base allo username
     public Utente getUtenteByUsername(String username) {
         return utenteRepository.findByUsername(username).orElse(null);
     }
 
-    public List<Utente> getAtletiPerRuolo(String ruoloAtleta) {
-        return utenteRepository.findByRuolo(ruoloAtleta);
+    // Ritorna gli utenti con lo stesso ruolo (passato come parametro)
+    public List<Utente> getUtentiPerRuolo(String ruoloUtente) {
+        return utenteRepository.findByRuolo(ruoloUtente);
     }
 }

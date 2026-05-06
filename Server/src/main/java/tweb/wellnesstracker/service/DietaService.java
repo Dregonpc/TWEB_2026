@@ -10,14 +10,15 @@ import java.util.List;
 @Service
 public class DietaService {
 
-    // --- Dependency injection ---
     @Autowired
     private DietaRepository dietaRepository;
 
+    // Salva un dieta
     public Dieta creaDieta(Dieta dieta) {
         return dietaRepository.save(dieta);
     }
 
+    // Ritorna tutte le diete di un utente
     public List<Dieta> getDieteUtente(Long utenteId) {
         return dietaRepository.findByUtenteId(utenteId);
     }
