@@ -5,8 +5,8 @@ export interface EsercizioSvolto {
     nomeEsercizio: string;
     serie: number | null;
     ripetizioni: number | null;
-    durata: number | null;
-    peso: number | null;
-    note: string | null;
+    peso: number | null;        // kg
+    durata: number | null;      // secondi
+    commento: string | null;
     logAllenamento: LogAllenamento;
 }

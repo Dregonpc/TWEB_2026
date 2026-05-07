@@ -5,8 +5,6 @@ export interface EsercizioScheda {
     nomeEsercizio: string;
     serie: number | null;
     ripetizioni: number | null;
-    durata: number | null;
-    peso: number | null;
     note: string | null;
-    Scheda: SchedaAllenamento;
+    scheda: SchedaAllenamento;
 }
