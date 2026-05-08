@@ -1,34 +1,34 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Utente } from '../types/Utente';
-import { login as apiLogin, logout as apiLogout, getMe } from '../api/authApi';
+import { login as apiLogin, logout as apiLogout, getUtenteCorrente } from '../api/authApi';
 
-// Forma del context
+// struct di contesto
 interface AuthContextType {
     utente: Utente | null;
-    loading: boolean;         // true mentre controlla la sessione al primo caricamento
-    errore: string | null;    // messaggio di errore login
+    loading: boolean;
+    errore: string | null;
     login: (username: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    clearErrore: () => void;
 }
 
-// Creazione context
+// creazione contesto
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Provider
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [utente, setUtente] = useState<Utente | null>(null);
     const [loading, setLoading] = useState(true);
     const [errore, setErrore] = useState<string | null>(null);
 
-    // Al primo caricamento dell'app controlla se c'è già una sessione attiva
     useEffect(() => {
-        getMe()
+        getUtenteCorrente()
             .then((u) => setUtente(u))
             .catch(() => setUtente(null))
             .finally(() => setLoading(false));
     }, []);
 
+    // login
     const login = async (username: string, password: string) => {
         setErrore(null);
         try {
@@ -37,28 +37,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (err) {
             const msg = err instanceof Error ? err.message : 'Errore sconosciuto';
             setErrore(msg);
-            throw err; // rilancia così la LoginPage può reagire se necessario
+            throw err;
         }
     };
 
+    // logout
     const logout = async () => {
-        await apiLogout();
-        setUtente(null);
+        setUtente(null);                      // reset immediato nell'UI
+        await apiLogout().catch(() => {});    // errori di rete sul logout ignorati
     };
 
+    const clearErrore = () => setErrore(null);
+
     return (
-        <AuthContext.Provider value={{ utente, loading, errore, login, logout }}>
+        <AuthContext.Provider value={{ utente, loading, errore, login, logout, clearErrore }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
 // Hook personalizzato
-// Uso: const { utente, login, logout } = useAuth();
 export function useAuth(): AuthContextType {
     const ctx = useContext(AuthContext);
-    if (!ctx) {
-        throw new Error('useAuth deve essere usato dentro <AuthProvider>');
-    }
+    if (!ctx) throw new Error('useAuth deve essere usato dentro <AuthProvider>');
     return ctx;
 }

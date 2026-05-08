@@ -1,74 +1,136 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import type { Ruolo } from './types';
+
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
+import DashboardUser from './pages/dashboard/DashboardUser';
+import DashboardCoach from './pages/dashboard/DashboardCoach';
+import DashboardPsicologo from './pages/dashboard/DashboardPsicologo';
 import LogAllenamentoPage from './pages/LogAllenamentoPage';
+import SchedePage from './pages/SchedePage';
+import LogBenesserePage from './pages/LogBenesserePage';
+import DietaPage from './pages/DietaPage';
+import SchedeCoachPage from './pages/SchedeCoachPage';
+import MonitoraUtenteCoachPage from './pages/MonitoraUtenteCoachPage';
+import MonitoraUtentePsicologoPage from './pages/MonitoraUtentePsicologoPage';
 
-// PrivateRoute: blocca l'accesso se non loggato o ruolo non consentito
-function PrivateRoute({
-    children,
-    ruoliConsentiti,
-}: {
-    children: ReactNode;
-    ruoliConsentiti?: string[];
+function ProtectedRoute({
+                            children,
+                            ruoli,
+                        }: {
+    children: React.ReactElement;
+    ruoli?: Ruolo[];
 }) {
-    const { utente, loading } = useAuth();
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-gray-400">
-                Caricamento...
-            </div>
-        );
-    }
-
+    const { utente } = useAuth();
     if (!utente) return <Navigate to="/login" replace />;
-
-    if (ruoliConsentiti && !ruoliConsentiti.includes(utente.ruolo)) {
-        return <Navigate to="/dashboard" replace />;
-    }
-
-    return <>{children}</>;
+    if (ruoli && !ruoli.includes(utente.ruolo)) return <Navigate to="/dashboard" replace />;
+    return children;
 }
 
-// Router principale
-export default function App() {
+function DashboardRouter() {
+    const { utente } = useAuth();
+    if (utente?.ruolo === 'COACH') return <DashboardCoach />;
+    if (utente?.ruolo === 'PSICOLOGO') return <DashboardPsicologo />;
+    return <DashboardUser />;
+}
+
+function PageLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <main className="max-w-5xl mx-auto px-4 py-8">
+                {children}
+            </main>
+        </div>
+    );
+}
+
+// ← useAuth() spostato qui dentro, DOPO BrowserRouter
+function AppRoutes() {
+    const { utente } = useAuth();
+
     return (
         <Routes>
-            {/* Rotta pubblica */}
-            <Route path="/login" element={<LoginPage />} />
-
-            {/* Redirect radice */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
-            {/* Dashboard — tutti i ruoli */}
+            <Route
+                path="/login"
+                element={utente ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+            />
             <Route
                 path="/dashboard"
                 element={
-                    <PrivateRoute>
-                        <DashboardPage />
-                    </PrivateRoute>
+                    <ProtectedRoute>
+                        <PageLayout>
+                            <DashboardRouter />
+                        </PageLayout>
+                    </ProtectedRoute>
                 }
             />
-
-            {/* USER */}
             <Route
-                path="/log-allenamento"
+                path="/allenamento"
                 element={
-                    <PrivateRoute ruoliConsentiti={['USER']}>
+                    <ProtectedRoute ruoli={['USER']}>
                         <LogAllenamentoPage />
-                    </PrivateRoute>
+                    </ProtectedRoute>
                 }
             />
-
-            {/* Prossime route — le aggiungeremo step by step */}
-            {/* <Route path="/log-allenamento" element={
-        <PrivateRoute ruoliConsentiti={['USER']}><LogAllenamentoPage /></PrivateRoute>
-      } /> */}
-
-            {/* Redirect di default */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route
+                path="/schede"
+                element={
+                    <ProtectedRoute ruoli={['USER']}>
+                        <SchedePage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/benessere"
+                element={
+                    <ProtectedRoute ruoli={['USER']}>
+                        <LogBenesserePage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/dieta"
+                element={
+                    <ProtectedRoute ruoli={['USER']}>
+                        <DietaPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/coach/schede"
+                element={
+                    <ProtectedRoute ruoli={['COACH']}>
+                        <SchedeCoachPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/coach/utente/:utenteId"
+                element={
+                    <ProtectedRoute ruoli={['COACH']}>
+                        <MonitoraUtenteCoachPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/psicologo/utente/:utenteId"
+                element={
+                    <ProtectedRoute ruoli={['PSICOLOGO']}>
+                        <MonitoraUtentePsicologoPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+    );
+}
+
+// ← App non usa più useAuth(), si limita a wrappare con BrowserRouter
+export default function App() {
+    return (
+        <BrowserRouter>
+            <AppRoutes />
+        </BrowserRouter>
     );
 }

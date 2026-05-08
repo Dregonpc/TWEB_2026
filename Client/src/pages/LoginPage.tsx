@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, Leaf } from 'lucide-react';
 
 export default function LoginPage() {
-    const { login, errore } = useAuth();
+    const { login, errore, clearErrore } = useAuth();
     const navigate = useNavigate();
 
     const [username, setUsername] = useState('');
@@ -26,14 +26,17 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4"
-             style={{ background: 'linear-gradient(160deg, #e0f2f1 5%, #b2dfdb 40%, #c8e6c9 80%)' }}>
+        <div className="min-h-screen flex items-center justify-center px-4
+                        bg-gradient-to-br from-teal-50 via-teal-100 to-green-100">
 
             <div className="bg-white w-full max-w-md rounded-2xl shadow-lg !p-5">
 
                 {/* Intestazione */}
                 <div className="mb-5 text-center">
-                    <h1 className="text-2xl font-bold text-green-800">🌿 Wellness Tracker</h1>
+                    <h1 className="flex items-center justify-center gap-2 text-2xl font-bold text-green-800">
+                        <Leaf className="w-6 h-6" />
+                        Wellness Tracker
+                    </h1>
                     <p className="text-gray-500 mt-1 text-sm">Accedi al tuo account</p>
                 </div>
 
@@ -52,7 +55,7 @@ export default function LoginPage() {
                                 id="username"
                                 type="text"
                                 value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                onChange={(e) => { setUsername(e.target.value); clearErrore(); }}
                                 placeholder="Inserisci username"
                                 required
                                 autoFocus
@@ -74,7 +77,7 @@ export default function LoginPage() {
                                 id="password"
                                 type={showPassword ? 'text' : 'password'}
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => { setPassword(e.target.value); clearErrore(); }}
                                 placeholder="Inserisci password"
                                 required
                                 className="flex-1 text-sm outline-none bg-transparent"
@@ -85,9 +88,7 @@ export default function LoginPage() {
                                 aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
                                 className="cursor-pointer text-gray-400 hover:text-green-700 transition-colors"
                             >
-                                {showPassword
-                                    ? <EyeOff className="w-4 h-4" />
-                                    : <Eye className="w-4 h-4" />}
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                         </div>
                     </div>
@@ -112,7 +113,6 @@ export default function LoginPage() {
 
                 </form>
             </div>
-
         </div>
     );
 }

@@ -11,7 +11,7 @@ const BASE_URL = 'http://localhost:8080/api';
 export async function getLogAllenamento(): Promise<LogAllenamento[]> {
     const res = await fetch(`${BASE_URL}/allenamento/storico`, { credentials: 'include' });
     if (!res.ok) throw new Error('Errore nel recupero log allenamento');
-    return res.json() as LogAllenamento[];
+    return await res.json() as LogAllenamento[];
 }
 
 /** Crea un nuovo log allenamento */
@@ -25,7 +25,7 @@ export async function postLogAllenamento(
         body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Errore nella creazione del log');
-    return res.json() as LogAllenamento;
+    return await res.json() as LogAllenamento;
 }
 
 /** Elimina un log allenamento */
@@ -44,7 +44,7 @@ export interface EsercizioSvoltoInput {
     serie?: number;
     ripetizioni?: number;
     peso?: number;      // kg
-    durata?: number;    // minuti
+    durata?: number;    // secondi
     note?: string;
 }
 
@@ -54,19 +54,19 @@ export async function getEserciziLog(logId: number): Promise<EsercizioSvolto[]> 
         credentials: 'include',
     });
     if (!res.ok) throw new Error('Errore nel recupero esercizi');
-    return res.json() as EsercizioSvolto[];
+    return await res.json() as EsercizioSvolto[];
 }
 
-// ── SCHEDE ALLENAMENTO ──────────────────────────────────────────────
+// SCHEDE ALLENAMENTO
 
 /** Recupera le schede assegnate dal coach all'utente loggato */
 export async function getSchedeUtente(): Promise<SchedaAllenamento[]> {
     const res = await fetch(`${BASE_URL}/allenamento/schede`, { credentials: 'include' });
     if (!res.ok) throw new Error('Errore nel recupero schede');
-    return res.json() as SchedaAllenamento[];
+    return await res.json() as SchedaAllenamento[];
 }
 
-// ── COMMENTI ────────────────────────────────────────────────────────
+// COMMENTI
 
 /** Recupera i commenti del coach su un log allenamento */
 export async function getCommentiLog(logId: number): Promise<CommentoAllenamento[]> {
@@ -74,5 +74,5 @@ export async function getCommentiLog(logId: number): Promise<CommentoAllenamento
         credentials: 'include',
     });
     if (!res.ok) throw new Error('Errore nel recupero commenti');
-    return res.json() as CommentoAllenamento[];
+    return await res.json() as CommentoAllenamento[];
 }

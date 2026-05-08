@@ -1,507 +1,394 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
-import {
-    getLogAllenamento,
-    getSchedeUtente,
-    postLogAllenamento,
-    deleteLogAllenamento,
-    type EsercizioSvoltoInput,
-} from '../api/logAllenamentoApi';
-import type { LogAllenamento } from '../types/LogAllenamento';
-import type { SchedaAllenamento } from '../types/SchedaAllenamento';
+import { getStorico, salvaLog } from '../api/allenamentoApi';
+import type { LogAllenamento } from '../types';
+import { Trophy, X, Calendar, Plus, Trash2, Dumbbell } from 'lucide-react';
 
-// Tipi form
-
-interface FormEsercizio {
+// -------------------------------------------------------
+// Tipi locali per la gestione degli esercizi nel form
+// -------------------------------------------------------
+interface EsercizioForm {
+    id: number;
     nomeEsercizio: string;
     serie: string;
     ripetizioni: string;
     peso: string;
     durata: string;
-    note: string;
+    commento: string;
 }
 
-const esercizioVuoto = (): FormEsercizio => ({
+const esercizioVuoto = (id: number): EsercizioForm => ({
+    id,
     nomeEsercizio: '',
     serie: '',
     ripetizioni: '',
     peso: '',
     durata: '',
-    note: '',
+    commento: '',
 });
 
-// Componenti UI
-
-function Badge({ testo, colore }: { testo: string; colore: string }) {
-    return (
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${colore}`}>
-            {testo}
-        </span>
-    );
-}
-
-// Card di un log allenamento
-function CardLog({
-    log,
-    onElimina,
-    onClick,
-}: {
-    log: LogAllenamento;
-    onElimina: (id: number) => void;
-    onClick: (log: LogAllenamento) => void;
-}) {
-    const data = new Date(log.data).toLocaleDateString('it-IT', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    });
-
-    return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-3
-                        hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between gap-2">
-                <div>
-                    <div className="font-semibold text-gray-800 capitalize">{data}</div>
-                    {log.note && (
-                        <div className="text-sm text-gray-400 mt-0.5 line-clamp-2">{log.note}</div>
-                    )}
-                </div>
-                <div className="flex gap-2 shrink-0">
-                    <button
-                        onClick={() => onClick(log)}
-                        className="text-xs text-green-700 hover:text-green-800 font-medium cursor-pointer"
-                    >
-                        Dettagli →
-                    </button>
-                    <button
-                        onClick={() => onElimina(log.id)}
-                        className="text-xs text-red-400 hover:text-red-600 cursor-pointer"
-                    >
-                        Elimina
-                    </button>
-                </div>
-            </div>
-
-            {/* Pill con numero esercizi se disponibile */}
-            {log.esercizi && log.esercizi.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
-                    {log.esercizi.slice(0, 4).map((e, i) => (
-                        <Badge key={i} testo={e.nomeEsercizio} colore="bg-green-50 text-green-700" />
-                    ))}
-                    {log.esercizi.length > 4 && (
-                        <Badge
-                            testo={`+${log.esercizi.length - 4} altri`}
-                            colore="bg-gray-100 text-gray-500"
-                        />
-                    )}
-                </div>
-            )}
-        </div>
-    );
-}
-
-// Riga esercizio nel form
-function RigaEsercizio({
-    esercizio,
-    index,
-    onChange,
-    onRimuovi,
-    totale,
-}: {
-    esercizio: FormEsercizio;
+// -------------------------------------------------------
+// ExerciseCard
+// -------------------------------------------------------
+function ExerciseCard({
+                          esercizio,
+                          index,
+                          onChange,
+                          onRemove,
+                      }: {
+    esercizio: EsercizioForm;
     index: number;
-    onChange: (i: number, campo: keyof FormEsercizio, val: string) => void;
-    onRimuovi: (i: number) => void;
-    totale: number;
+    onChange: (id: number, field: keyof EsercizioForm, value: string) => void;
+    onRemove: (id: number) => void;
 }) {
-    const input = 'border border-gray-200 rounded-lg px-3 py-1.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-green-400';
-
     return (
-        <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-3">
+        <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 flex flex-col gap-3">
+
+            {/* Header card */}
             <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-600">Esercizio {index + 1}</span>
-                {totale > 1 && (
-                    <button
-                        type="button"
-                        onClick={() => onRimuovi(index)}
-                        className="text-xs text-red-400 hover:text-red-600 cursor-pointer"
-                    >
-                        Rimuovi
-                    </button>
-                )}
+                <span className="text-sm font-semibold text-slate-600">
+                    Esercizio {index + 1}
+                </span>
+                <button
+                    type="button"
+                    onClick={() => onRemove(esercizio.id)}
+                    className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600
+                               transition-colors cursor-pointer"
+                >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Rimuovi
+                </button>
             </div>
 
-            {/* Nome */}
-            <input
-                className={input}
-                placeholder="Nome esercizio *"
-                value={esercizio.nomeEsercizio}
-                onChange={e => onChange(index, 'nomeEsercizio', e.target.value)}
-                required
-            />
-
-            {/* Dati numerici */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Serie</label>
-                    <input
-                        type="number" min="1" className={input} placeholder="es. 3"
-                        value={esercizio.serie}
-                        onChange={e => onChange(index, 'serie', e.target.value)}
-                    />
-                </div>
-                <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Ripetizioni</label>
-                    <input
-                        type="number" min="1" className={input} placeholder="es. 10"
-                        value={esercizio.ripetizioni}
-                        onChange={e => onChange(index, 'ripetizioni', e.target.value)}
-                    />
-                </div>
-                <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Peso (kg)</label>
-                    <input
-                        type="number" min="0" step="0.5" className={input} placeholder="es. 80"
-                        value={esercizio.peso}
-                        onChange={e => onChange(index, 'peso', e.target.value)}
-                    />
-                </div>
-                <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Durata (min)</label>
-                    <input
-                        type="number" min="0" className={input} placeholder="es. 20"
-                        value={esercizio.durata}
-                        onChange={e => onChange(index, 'durata', e.target.value)}
-                    />
-                </div>
+            {/* Nome esercizio */}
+            <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-slate-500">
+                    Nome esercizio <span className="text-red-400">*</span>
+                </label>
+                <input
+                    type="text"
+                    value={esercizio.nomeEsercizio}
+                    onChange={(e) => onChange(esercizio.id, 'nomeEsercizio', e.target.value)}
+                    placeholder="Es. Squat, Panca piana..."
+                    required
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm
+                               bg-white placeholder-slate-300 text-slate-700
+                               focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                               transition-all"
+                />
             </div>
 
-            {/* Note */}
-            <input
-                className={input}
-                placeholder="Note (opzionale)"
-                value={esercizio.note}
-                onChange={e => onChange(index, 'note', e.target.value)}
-            />
+            {/* Grid parametri */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {[
+                    { field: 'serie',       label: 'Serie',       placeholder: 'es. 4' },
+                    { field: 'ripetizioni', label: 'Ripetizioni', placeholder: 'es. 10' },
+                    { field: 'peso',        label: 'Peso (kg)',   placeholder: 'es. 80' },
+                    { field: 'durata',      label: 'Durata (min)',placeholder: 'es. 5'  },
+                ].map(({ field, label, placeholder }) => (
+                    <div key={field} className="flex flex-col gap-1">
+                        <label className="text-xs text-slate-400">{label}</label>
+                        <input
+                            type="number"
+                            value={esercizio[field as keyof EsercizioForm]}
+                            onChange={(e) => onChange(esercizio.id, field as keyof EsercizioForm, e.target.value)}
+                            placeholder={placeholder}
+                            min={0}
+                            className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm
+                                       bg-white placeholder-slate-300 text-slate-700
+                                       focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                                       transition-all"
+                        />
+                    </div>
+                ))}
+            </div>
+
+            {/* Note esercizio */}
+            <div className="flex flex-col gap-1">
+                <label className="text-xs text-slate-400">Note</label>
+                <input
+                    type="text"
+                    value={esercizio.commento}
+                    onChange={(e) => onChange(esercizio.id, 'commento', e.target.value)}
+                    placeholder="Note specifiche su questo esercizio..."
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm
+                               bg-white placeholder-slate-300 text-slate-700
+                               focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                               transition-all"
+                />
+            </div>
         </div>
     );
 }
 
-// Modale per creare un nuovo log
-function ModalNuovoLog({
-    onChiudi,
-    onSalvato,
-}: {
-    onChiudi: () => void;
-    onSalvato: (log: LogAllenamento) => void;
-}) {
-    const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+// -------------------------------------------------------
+// LogAllenamentoPage
+// -------------------------------------------------------
+export default function LogAllenamentoPage() {
+    const [storico, setStorico] = useState<LogAllenamento[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [mostraModal, setMostraModal] = useState(false);
+
+    // Campi form
+    const [data, setData] = useState('');
     const [note, setNote] = useState('');
-    const [esercizi, setEsercizi] = useState<FormEsercizio[]>([esercizioVuoto()]);
-    const [caricamento, setCaricamento] = useState(false);
+    const [esercizi, setEsercizi] = useState<EsercizioForm[]>([esercizioVuoto(1)]);
+    const [nextId, setNextId] = useState(2);
+    const [salvataggio, setSalvataggio] = useState(false);
     const [errore, setErrore] = useState<string | null>(null);
 
-    const aggiornaEsercizio = (i: number, campo: keyof FormEsercizio, val: string) => {
-        setEsercizi(prev => prev.map((e, idx) => idx === i ? { ...e, [campo]: val } : e));
+    useEffect(() => {
+        caricaStorico();
+    }, []);
+
+    const caricaStorico = async () => {
+        try {
+            const logs = await getStorico();
+            setStorico(logs);
+        } catch (err) {
+            console.error('Errore caricamento storico:', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const aggiungiEsercizio = () => setEsercizi(prev => [...prev, esercizioVuoto()]);
+    const aggiungiEsercizio = () => {
+        setEsercizi(prev => [...prev, esercizioVuoto(nextId)]);
+        setNextId(prev => prev + 1);
+    };
 
-    const rimuoviEsercizio = (i: number) =>
-        setEsercizi(prev => prev.filter((_, idx) => idx !== i));
+    const rimuoviEsercizio = (id: number) => {
+        if (esercizi.length === 1) return; // almeno uno
+        setEsercizi(prev => prev.filter(e => e.id !== id));
+    };
+
+    const aggiornaEsercizio = (id: number, field: keyof EsercizioForm, value: string) => {
+        setEsercizi(prev =>
+            prev.map(e => e.id === id ? { ...e, [field]: value } : e)
+        );
+    };
+
+    const resetForm = () => {
+        setData('');
+        setNote('');
+        setEsercizi([esercizioVuoto(1)]);
+        setNextId(2);
+        setErrore(null);
+    };
+
+    const chiudiModal = () => {
+        setMostraModal(false);
+        resetForm();
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setErrore(null);
-
-        // Validazione
-        if (esercizi.some(e => !e.nomeEsercizio.trim())) {
-            setErrore('Inserisci il nome per ogni esercizio.');
-            return;
-        }
-
-        const payload = {
-            data,
-            note: note.trim() || undefined,
-            esercizi: esercizi.map(e => ({
-                nomeEsercizio: e.nomeEsercizio.trim(),
-                serie: e.serie ? parseInt(e.serie) : undefined,
-                ripetizioni: e.ripetizioni ? parseInt(e.ripetizioni) : undefined,
-                peso: e.peso ? parseFloat(e.peso) : undefined,
-                durata: e.durata ? parseInt(e.durata) : undefined,
-                note: e.note.trim() || undefined,
-            } satisfies EsercizioSvoltoInput)),
-        };
-
-        setCaricamento(true);
+        setSalvataggio(true);
         try {
-            const nuovo = await postLogAllenamento(payload);
-            onSalvato(nuovo);
+            const nuovoLog = await salvaLog({ data, note: note || null });
+            setStorico(prev => [nuovoLog, ...prev]);
+            chiudiModal();
         } catch {
-            setErrore('Errore nel salvataggio. Riprova.');
+            setErrore('Errore durante il salvataggio. Riprova.');
         } finally {
-            setCaricamento(false);
+            setSalvataggio(false);
         }
     };
 
     return (
-        // Overlay
-        <div
-            className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 py-8 overflow-y-auto"
-            onClick={e => { if (e.target === e.currentTarget) onChiudi(); }}
-        >
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 flex flex-col gap-5">
-
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-gray-800">🏋️ Nuovo allenamento</h2>
-                    <button
-                        onClick={onChiudi}
-                        className="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer"
-                    >
-                        ✕
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-
-                    {/* Data e note generali */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-sm font-medium text-gray-600 mb-1 block">
-                                Data *
-                            </label>
-                            <input
-                                type="date"
-                                required
-                                value={data}
-                                max={new Date().toISOString().split('T')[0]}
-                                onChange={e => setData(e.target.value)}
-                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full
-                                           focus:outline-none focus:ring-2 focus:ring-green-400"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium text-gray-600 mb-1 block">
-                                Note generali
-                            </label>
-                            <input
-                                type="text"
-                                placeholder="es. Mi sono sentito bene…"
-                                value={note}
-                                onChange={e => setNote(e.target.value)}
-                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full
-                                           focus:outline-none focus:ring-2 focus:ring-green-400"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Esercizi */}
-                    <div className="flex flex-col gap-3">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-gray-700">Esercizi svolti</h3>
-                            <button
-                                type="button"
-                                onClick={aggiungiEsercizio}
-                                className="text-xs bg-green-50 text-green-700 hover:bg-green-100
-                                           px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer"
-                            >
-                                + Aggiungi esercizio
-                            </button>
-                        </div>
-
-                        {esercizi.map((e, i) => (
-                            <RigaEsercizio
-                                key={i}
-                                esercizio={e}
-                                index={i}
-                                onChange={aggiornaEsercizio}
-                                onRimuovi={rimuoviEsercizio}
-                                totale={esercizi.length}
-                            />
-                        ))}
-                    </div>
-
-                    {/* Errore */}
-                    {errore && (
-                        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg">
-                            {errore}
-                        </div>
-                    )}
-
-                    {/* Azioni */}
-                    <div className="flex gap-3 justify-end pt-2">
-                        <button
-                            type="button"
-                            onClick={onChiudi}
-                            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 cursor-pointer"
-                        >
-                            Annulla
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={caricamento}
-                            className="px-5 py-2 bg-green-700 hover:bg-green-800 text-white text-sm
-                                       font-semibold rounded-lg transition-colors disabled:opacity-60 cursor-pointer"
-                        >
-                            {caricamento ? 'Salvataggio…' : 'Salva allenamento'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-}
-
-// Pagina principale
-
-export default function LogAllenamentoPage() {
-    const navigate = useNavigate();
-    const [logs, setLogs] = useState<LogAllenamento[]>([]);
-    const [schede, setSchede] = useState<SchedaAllenamento[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [mostraModal, setMostraModal] = useState(false);
-    const [tab, setTab] = useState<'log' | 'schede'>('log');
-    const [errore, setErrore] = useState<string | null>(null);
-
-    useEffect(() => {
-        Promise.all([getLogAllenamento(), getSchedeUtente()])
-            .then(([l, s]) => {
-                setLogs(l.sort((a, b) => b.data.localeCompare(a.data)));
-                setSchede(s);
-            })
-            .catch(() => setErrore('Errore nel caricamento dei dati.'))
-            .finally(() => setLoading(false));
-    }, []);
-
-    const handleElimina = async (id: number) => {
-        if (!confirm('Eliminare questo allenamento?')) return;
-        try {
-            await deleteLogAllenamento(id);
-            setLogs(prev => prev.filter(l => l.id !== id));
-        } catch {
-            alert('Errore nell\'eliminazione.');
-        }
-    };
-
-    const handleSalvato = (nuovo: LogAllenamento) => {
-        setLogs(prev => [nuovo, ...prev]);
-        setMostraModal(false);
-    };
-
-    const tabClass = (t: 'log' | 'schede') =>
-        `px-4 py-2 text-sm font-semibold rounded-lg transition-colors cursor-pointer ${
-            tab === t
-                ? 'bg-green-700 text-white'
-                : 'text-gray-500 hover:bg-gray-100'
-        }`;
-
-    return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-50">
             <NavBar />
 
-            <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
+            <main className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
 
-                {/* Header */}
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div>
-                        <button
-                            onClick={() => navigate('/dashboard')}
-                            className="text-xs text-gray-400 hover:text-gray-600 mb-1 flex items-center gap-1 cursor-pointer"
-                        >
-                            ← Dashboard
-                        </button>
-                        <h1 className="text-xl font-bold text-gray-800">🏋️ Allenamento</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">
-                            Tieni traccia dei tuoi progressi
-                        </p>
+                {/* Header pagina */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Dumbbell className="w-6 h-6 text-emerald-700" />
+                        <h1 className="text-2xl font-bold text-slate-800">I miei allenamenti</h1>
                     </div>
                     <button
                         onClick={() => setMostraModal(true)}
-                        className="px-4 py-2 bg-green-700 hover:bg-green-800 text-white text-sm
-                                   font-semibold rounded-lg transition-colors cursor-pointer"
+                        className="flex items-center gap-2 text-sm bg-emerald-700 hover:bg-emerald-800
+                                   text-white font-semibold px-4 py-2 rounded-lg transition-colors
+                                   shadow-sm cursor-pointer"
                     >
-                        + Registra allenamento
+                        <Plus className="w-4 h-4" />
+                        Nuovo allenamento
                     </button>
                 </div>
 
-                {/* Tabs */}
-                <div className="flex gap-2">
-                    <button className={tabClass('log')} onClick={() => setTab('log')}>
-                        📋 I miei log ({logs.length})
-                    </button>
-                    <button className={tabClass('schede')} onClick={() => setTab('schede')}>
-                        📄 Schede del coach ({schede.length})
-                    </button>
-                </div>
-
-                {/* Contenuto */}
-                {loading ? (
-                    <div className="text-center py-16 text-gray-400 text-sm">Caricamento…</div>
-                ) : errore ? (
-                    <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg">{errore}</div>
-                ) : tab === 'log' ? (
-                    logs.length === 0 ? (
-                        <div className="flex flex-col items-center gap-3 py-16 text-center">
-                            <div className="text-5xl">🏃</div>
-                            <p className="text-gray-500 font-medium">Nessun allenamento registrato</p>
-                            <p className="text-sm text-gray-400">Inizia registrando il tuo primo allenamento!</p>
-                            <button
-                                onClick={() => setMostraModal(true)}
-                                className="mt-2 px-4 py-2 bg-green-700 text-white text-sm
-                                           font-semibold rounded-lg hover:bg-green-800 transition-colors cursor-pointer"
-                            >
-                                Registra ora
-                            </button>
+                {/* Storico */}
+                <section className="flex flex-col gap-3">
+                    {loading ? (
+                        <p className="text-sm text-slate-400">Caricamento...</p>
+                    ) : storico.length === 0 ? (
+                        <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center text-slate-400">
+                            <Dumbbell className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                            <p className="text-sm">Nessun allenamento registrato.</p>
+                            <p className="text-xs mt-1">Premi "Nuovo allenamento" per iniziare!</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {logs.map(log => (
-                                <CardLog
+                        <ul className="flex flex-col gap-3">
+                            {storico.map((log) => (
+                                <li
                                     key={log.id}
-                                    log={log}
-                                    onElimina={handleElimina}
-                                    onClick={log => navigate(`/allenamento/${log.id}`)}
-                                />
-                            ))}
-                        </div>
-                    )
-                ) : (
-                    // Tab schede
-                    schede.length === 0 ? (
-                        <div className="flex flex-col items-center gap-3 py-16 text-center">
-                            <div className="text-5xl">📄</div>
-                            <p className="text-gray-500 font-medium">Nessuna scheda assegnata</p>
-                            <p className="text-sm text-gray-400">Il tuo coach non ti ha ancora assegnato una scheda.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {schede.map(s => (
-                                <div
-                                    key={s.id}
-                                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+                                    className="bg-white rounded-2xl shadow-sm border border-slate-100 px-5 py-4
+                                               flex flex-col gap-1"
                                 >
-                                    <div className="font-semibold text-gray-800">{s.titolo ?? `Scheda #${s.id}`}</div>
-                                    {s.descrizione && (
-                                        <div className="text-sm text-gray-400 mt-1">{s.descrizione}</div>
-                                    )}
-                                    {s.dataCreazione && (
-                                        <div className="text-xs text-gray-300 mt-3">
-                                            Creata il {new Date(s.dataCreazione).toLocaleDateString('it-IT')}
-                                        </div>
-                                    )}
-                                </div>
+                                    <span className="text-sm font-semibold text-slate-700">
+                                        {new Date(log.data).toLocaleDateString('it-IT', {
+                                            weekday: 'long',
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric',
+                                        })}
+                                    </span>
+                                    {log.note
+                                        ? <span className="text-sm text-slate-500">{log.note}</span>
+                                        : <span className="text-xs text-slate-300 italic">Nessuna nota</span>
+                                    }
+                                </li>
                             ))}
-                        </div>
-                    )
-                )}
+                        </ul>
+                    )}
+                </section>
             </main>
 
-            {/* Modale */}
+            {/* ── MODAL ── */}
             {mostraModal && (
-                <ModalNuovoLog
-                    onChiudi={() => setMostraModal(false)}
-                    onSalvato={handleSalvato}
-                />
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center
+                               bg-black/40 backdrop-blur-sm px-4"
+                    onClick={(e) => { if (e.target === e.currentTarget) chiudiModal(); }}
+                >
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl
+                                    max-h-[90vh] overflow-y-auto">
+
+                        <form onSubmit={handleSubmit} className="p-6 md:p-8 flex flex-col gap-6">
+
+                            {/* Header modal */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Trophy className="w-5 h-5 text-emerald-600" />
+                                    <h2 className="text-xl font-bold text-slate-800">
+                                        Nuovo allenamento
+                                    </h2>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={chiudiModal}
+                                    className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Metadati: data + note */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                                {/* Data */}
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-slate-600">
+                                        Data <span className="text-red-400">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="date"
+                                            value={data}
+                                            onChange={(e) => setData(e.target.value)}
+                                            required
+                                            max={new Date().toISOString().split('T')[0]}
+                                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm
+                                                       text-slate-700 bg-white
+                                                       focus:outline-none focus:ring-2 focus:ring-emerald-500
+                                                       focus:border-transparent transition-all pr-10"
+                                        />
+                                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2
+                                                             w-4 h-4 text-slate-400 pointer-events-none" />
+                                    </div>
+                                </div>
+
+                                {/* Note generali */}
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-slate-600">
+                                        Note generali
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={note}
+                                        onChange={(e) => setNote(e.target.value)}
+                                        placeholder="Es. Giornata di forza, buona energia..."
+                                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm
+                                                   text-slate-700 bg-white placeholder-slate-300
+                                                   focus:outline-none focus:ring-2 focus:ring-emerald-500
+                                                   focus:border-transparent transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Sezione esercizi */}
+                            <div className="flex flex-col gap-4">
+                                <div className="flex items-end justify-between">
+                                    <h3 className="font-semibold text-slate-700">Esercizi svolti</h3>
+                                    <button
+                                        type="button"
+                                        onClick={aggiungiEsercizio}
+                                        className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100
+                                                   text-emerald-700 text-sm font-medium
+                                                   px-3 py-1.5 rounded-md transition-colors cursor-pointer"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        Aggiungi
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-col gap-3">
+                                    {esercizi.map((esercizio, index) => (
+                                        <ExerciseCard
+                                            key={esercizio.id}
+                                            esercizio={esercizio}
+                                            index={index}
+                                            onChange={aggiornaEsercizio}
+                                            onRemove={rimuoviEsercizio}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Errore */}
+                            {errore && (
+                                <p className="text-sm text-red-600 bg-red-50 border border-red-200
+                                             rounded-lg px-4 py-2">
+                                    {errore}
+                                </p>
+                            )}
+
+                            {/* Footer */}
+                            <div className="flex justify-end items-center gap-4 mt-2">
+                                <button
+                                    type="button"
+                                    onClick={chiudiModal}
+                                    className="text-sm text-slate-500 hover:text-slate-700
+                                               transition-colors cursor-pointer"
+                                >
+                                    Annulla
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={salvataggio}
+                                    className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50
+                                               disabled:cursor-not-allowed text-white font-bold
+                                               py-2 px-6 rounded-lg shadow-md transition-colors cursor-pointer"
+                                >
+                                    {salvataggio ? 'Salvataggio...' : 'Salva allenamento'}
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );
