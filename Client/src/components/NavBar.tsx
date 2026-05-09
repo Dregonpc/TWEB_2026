@@ -1,13 +1,22 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Leaf } from 'lucide-react';
+import {
+    LogOut, Leaf, LayoutDashboard, Dumbbell, Heart,
+    ClipboardList, Salad, Users, Menu, X,
+} from 'lucide-react';
 
 const ruoloBadge: Record<string, string> = {
     USER:      'bg-blue-100 text-blue-700',
     COACH:     'bg-orange-100 text-orange-700',
     PSICOLOGO: 'bg-purple-100 text-purple-700',
 };
+
+interface NavLink {
+    path: string;
+    label: string;
+    icon: React.ReactElement;
+}
 
 export default function NavBar() {
     const { utente, logout } = useAuth();
@@ -22,138 +31,140 @@ export default function NavBar() {
 
     const chiudiMenu = () => setMenuAperto(false);
 
-    const linkClass = (path: string, mobile: boolean) => {
-        const attivo = pathname === path ? 'underline underline-offset-4' : '';
-        return mobile
-            ? `block px-4 py-3 text-sm font-medium text-white hover:bg-green-700 transition-colors ${attivo}`
-            : `text-sm font-medium text-white hover:text-green-200 transition-colors ${attivo}`;
+    const linksByRuolo: Record<string, NavLink[]> = {
+        USER: [
+            { path: '/dashboard',   label: 'Dashboard',   icon: <LayoutDashboard className="w-4 h-4" /> },
+            { path: '/allenamento', label: 'Allenamento', icon: <Dumbbell className="w-4 h-4" /> },
+            { path: '/benessere',   label: 'Benessere',   icon: <Heart className="w-4 h-4" /> },
+            { path: '/schede',      label: 'Schede',      icon: <ClipboardList className="w-4 h-4" /> },
+            { path: '/dieta',       label: 'Dieta',       icon: <Salad className="w-4 h-4" /> },
+        ],
+        COACH: [
+            { path: '/dashboard',    label: 'Dashboard',       icon: <LayoutDashboard className="w-4 h-4" /> },
+            { path: '/coach/schede', label: 'Gestisci schede', icon: <ClipboardList className="w-4 h-4" /> },
+        ],
+        PSICOLOGO: [
+            { path: '/dashboard',        label: 'Dashboard',    icon: <LayoutDashboard className="w-4 h-4" /> },
+            { path: '/psicologo/utenti', label: 'I miei utenti', icon: <Users className="w-4 h-4" /> },
+        ],
     };
 
-    const links = (mobile = false) => (
-        <>
-            <Link to="/dashboard" className={linkClass('/dashboard', mobile)} onClick={chiudiMenu}>
-                Dashboard
-            </Link>
+    const links = linksByRuolo[utente?.ruolo ?? 'USER'] ?? [];
 
-            {utente?.ruolo === 'USER' && (
-                <>
-                    <Link to="/allenamento" className={linkClass('/allenamento', mobile)} onClick={chiudiMenu}>
-                        Allenamento
-                    </Link>
-                    <Link to="/benessere" className={linkClass('/benessere', mobile)} onClick={chiudiMenu}>
-                        Benessere
-                    </Link>
-                    <Link to="/schede" className={linkClass('/schede', mobile)} onClick={chiudiMenu}>
-                        Schede
-                    </Link>
-                    <Link to="/dieta" className={linkClass('/dieta', mobile)} onClick={chiudiMenu}>
-                        Dieta
-                    </Link>
-                </>
-            )}
+    const desktopLinkClass = (path: string) => {
+        const attivo = pathname === path;
+        return [
+            'flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors',
+            attivo ? 'bg-green-700 text-white' : 'text-green-100 hover:text-white hover:bg-green-700',
+        ].join(' ');
+    };
 
-            {utente?.ruolo === 'COACH' && (
-                <>
-                    <Link to="/coach/schede" className={linkClass('/coach/schede', mobile)} onClick={chiudiMenu}>
-                        Gestisci schede
-                    </Link>
-                </>
-            )}
-
-            {/* Il psicologo naviga sugli utenti dalla dashboard, nessun link aggiuntivo fisso */}
-            {utente?.ruolo === 'PSICOLOGO' && (null)}
-        </>
-    );
+    const mobileLinkClass = (path: string) => {
+        const attivo = pathname === path;
+        return [
+            'flex items-center justify-end gap-3 px-4 py-3 text-sm font-medium transition-colors',
+            attivo ? 'bg-green-700 text-white' : 'text-green-100 hover:bg-green-700 hover:text-white',
+        ].join(' ');
+    };
 
     return (
-        <nav className="bg-green-800 text-white shadow-md">
+        <nav className="bg-green-800 text-white shadow-md w-full">
 
-            {/* Barra principale */}
-            <div className="px-6 py-3 flex items-center justify-between">
+            {/* ── Barra principale ── */}
+            <div className="w-full px-6 py-3 flex items-center justify-between gap-4">
 
                 {/* Logo */}
                 <Link
                     to="/dashboard"
-                    className="flex items-center gap-2 font-bold text-lg hover:opacity-80 transition-opacity"
+                    className="flex items-center gap-2 font-bold text-lg hover:opacity-80
+                               transition-opacity shrink-0"
                 >
-                    <Leaf className="w-5 h-5" />
-                    <span>Wellness Tracker</span>
+                    <Leaf className="w-5 h-5 text-green-300" />
+                    <span>WellnessTracker</span>
                 </Link>
 
                 {/* Link desktop */}
-                <div className="hidden md:flex items-center gap-6">
-                    {links()}
+                <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
+                    {links.map(({ path, label, icon }) => (
+                        <Link key={path} to={path} className={desktopLinkClass(path)}>
+                            {icon}
+                            {label}
+                        </Link>
+                    ))}
                 </div>
 
-                {/* Area destra */}
-                <div className="flex items-center gap-3">
-
-                    {/* Info utente — solo desktop */}
-                    <div className="hidden md:flex items-center gap-2">
-                        <span className="text-sm text-green-100">
-                            {utente?.nome} {utente?.cognome}
-                        </span>
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ruoloBadge[utente?.ruolo ?? 'USER']}`}>
-                            {utente?.ruolo}
-                        </span>
-                    </div>
-
-                    {/* Logout — solo desktop */}
+                {/* Area destra desktop */}
+                <div className="hidden md:flex items-center gap-3 shrink-0">
+                    <span className="text-sm text-green-100">
+                        {utente?.nome} {utente?.cognome}
+                    </span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full
+                                      ${ruoloBadge[utente?.ruolo ?? 'USER']}`}>
+                        {utente?.ruolo}
+                    </span>
                     <button
                         onClick={handleLogout}
                         aria-label="Logout"
-                        className="hidden md:flex items-center justify-center bg-red-500 hover:bg-red-400
+                        className="flex items-center justify-center bg-red-500 hover:bg-red-400
                                    p-2 rounded-lg transition-colors cursor-pointer"
                     >
                         <LogOut className="w-4 h-4" />
                     </button>
-
-                    {/* Hamburger — solo mobile */}
-                    <button
-                        onClick={() => setMenuAperto(prev => !prev)}
-                        className="md:hidden flex flex-col justify-center items-center
-                                   w-9 h-9 rounded-lg hover:bg-green-700 transition-colors cursor-pointer gap-1.5"
-                        aria-label={menuAperto ? 'Chiudi menu' : 'Apri menu'}
-                    >
-                        <span className={`block w-5 h-0.5 bg-white transition-all duration-300
-                                         ${menuAperto ? 'rotate-45 translate-y-2' : ''}`} />
-                        <span className={`block w-5 h-0.5 bg-white transition-all duration-300
-                                         ${menuAperto ? 'opacity-0' : ''}`} />
-                        <span className={`block w-5 h-0.5 bg-white transition-all duration-300
-                                         ${menuAperto ? '-rotate-45 -translate-y-2' : ''}`} />
-                    </button>
-
                 </div>
+
+                {/* Hamburger mobile */}
+                <button
+                    onClick={() => setMenuAperto(prev => !prev)}
+                    className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg
+                               hover:bg-green-700 transition-colors cursor-pointer"
+                    aria-label={menuAperto ? 'Chiudi menu' : 'Apri menu'}
+                >
+                    {menuAperto ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
             </div>
 
-            {/* Menu mobile */}
+            {/* ── Menu mobile — voci allineate a destra ── */}
             <div className={`md:hidden overflow-hidden transition-all duration-300
-                             ${menuAperto ? 'max-h-96' : 'max-h-0'}`}>
-                <div className="border-t border-green-700 pb-2">
+                             ${menuAperto ? 'max-h-screen' : 'max-h-0'}`}>
+                <div className="border-t border-green-700 flex flex-col pb-3">
 
-                    {links(true)}
+                    {/* Links — testo + icona a destra */}
+                    {links.map(({ path, label, icon }) => (
+                        <Link
+                            key={path}
+                            to={path}
+                            className={mobileLinkClass(path)}
+                            onClick={chiudiMenu}
+                        >
+                            <span>{label}</span>
+                            {icon}
+                        </Link>
+                    ))}
 
-                    <div className="border-t border-green-700 mt-2 pt-2 px-4">
-                        <div className="flex items-center gap-2 py-2">
+                    {/* Profilo + logout */}
+                    <div className="border-t border-green-700 mt-2 pt-3 px-4 flex items-center
+                                    justify-between gap-3">
+                        <div className="flex items-center gap-2">
                             <span className="text-sm text-green-100">
                                 {utente?.nome} {utente?.cognome}
                             </span>
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ruoloBadge[utente?.ruolo ?? 'USER']}`}>
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full
+                                              ${ruoloBadge[utente?.ruolo ?? 'USER']}`}>
                                 {utente?.ruolo}
                             </span>
                         </div>
-
                         <button
                             onClick={handleLogout}
-                            className=" text-left text-sm px-3 py-2 rounded-lg bg-red-500
-                                        transition-colors cursor-pointer"
+                            aria-label="Logout"
+                            className="flex items-center gap-2 bg-red-500 hover:bg-red-400
+                                       px-3 py-2 rounded-lg transition-colors cursor-pointer text-sm"
                         >
-                            <LogOut className="w-4 h-4 red" />
+                            <LogOut className="w-4 h-4" />
+                            Logout
                         </button>
                     </div>
                 </div>
             </div>
-
         </nav>
     );
 }

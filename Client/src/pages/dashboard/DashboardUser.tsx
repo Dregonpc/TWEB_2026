@@ -39,7 +39,6 @@ export default function DashboardUser() {
 
     return (
         <div className="flex flex-col gap-8">
-
             <div>
                 <h1 className="text-2xl font-bold text-gray-800">Ciao, {utente?.nome}!</h1>
                 <p className="text-gray-500 text-sm mt-1">Ecco il riepilogo della tua attività recente.</p>

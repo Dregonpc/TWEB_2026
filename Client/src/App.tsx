@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import type { Ruolo } from './types';
+import NavBar from './components/NavBar.tsx'
 
 import LoginPage from './pages/LoginPage';
 import DashboardUser from './pages/dashboard/DashboardUser';
@@ -38,6 +39,7 @@ function DashboardRouter() {
 function PageLayout({ children }: { children: React.ReactNode }) {
     return (
         <div className="min-h-screen bg-gray-50">
+            <NavBar />
             <main className="max-w-5xl mx-auto px-4 py-8">
                 {children}
             </main>
