@@ -13,6 +13,9 @@ import SchedePage from './pages/SchedePage';
 import LogBenesserePage from './pages/LogBenesserePage';
 import DietaPage from './pages/DietaPage';
 import SchedeCoachPage from './pages/SchedeCoachPage';
+import DieteCoachPage from './pages/DieteCoachPage';
+import ListaUtentiCoachPage from './pages/ListaUtentiCoachPage';
+import ListaUtentiPsicologoPage from './pages/ListaUtentiPsicologoPage';
 import MonitoraUtenteCoachPage from './pages/MonitoraUtenteCoachPage';
 import MonitoraUtentePsicologoPage from './pages/MonitoraUtentePsicologoPage';
 
@@ -47,7 +50,6 @@ function PageLayout({ children }: { children: React.ReactNode }) {
     );
 }
 
-// ← useAuth() spostato qui dentro, DOPO BrowserRouter
 function AppRoutes() {
     const { utente } = useAuth();
 
@@ -67,68 +69,28 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
-            <Route
-                path="/allenamento"
-                element={
-                    <ProtectedRoute ruoli={['USER']}>
-                        <LogAllenamentoPage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/schede"
-                element={
-                    <ProtectedRoute ruoli={['USER']}>
-                        <SchedePage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/benessere"
-                element={
-                    <ProtectedRoute ruoli={['USER']}>
-                        <LogBenesserePage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/dieta"
-                element={
-                    <ProtectedRoute ruoli={['USER']}>
-                        <DietaPage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/coach/schede"
-                element={
-                    <ProtectedRoute ruoli={['COACH']}>
-                        <SchedeCoachPage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/coach/utente/:utenteId"
-                element={
-                    <ProtectedRoute ruoli={['COACH']}>
-                        <MonitoraUtenteCoachPage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/psicologo/utente/:utenteId"
-                element={
-                    <ProtectedRoute ruoli={['PSICOLOGO']}>
-                        <MonitoraUtentePsicologoPage />
-                    </ProtectedRoute>
-                }
-            />
+
+            {/* ── USER ─────────────────────────────────────── */}
+            <Route path="/allenamento" element={<ProtectedRoute ruoli={['USER']}><LogAllenamentoPage /></ProtectedRoute>} />
+            <Route path="/schede"      element={<ProtectedRoute ruoli={['USER']}><SchedePage /></ProtectedRoute>} />
+            <Route path="/benessere"   element={<ProtectedRoute ruoli={['USER']}><LogBenesserePage /></ProtectedRoute>} />
+            <Route path="/dieta"       element={<ProtectedRoute ruoli={['USER']}><DietaPage /></ProtectedRoute>} />
+
+            {/* ── COACH ────────────────────────────────────── */}
+            <Route path="/coach/schede"          element={<ProtectedRoute ruoli={['COACH']}><SchedeCoachPage /></ProtectedRoute>} />
+            <Route path="/coach/dieta"           element={<ProtectedRoute ruoli={['COACH']}><DieteCoachPage /></ProtectedRoute>} />
+            <Route path="/coach/utenti"          element={<ProtectedRoute ruoli={['COACH']}><ListaUtentiCoachPage /></ProtectedRoute>} />
+            <Route path="/coach/utente/:utenteId" element={<ProtectedRoute ruoli={['COACH']}><MonitoraUtenteCoachPage /></ProtectedRoute>} />
+
+            {/* ── PSICOLOGO ────────────────────────────────── */}
+            <Route path="/psicologo/utenti"          element={<ProtectedRoute ruoli={['PSICOLOGO']}><ListaUtentiPsicologoPage /></ProtectedRoute>} />
+            <Route path="/psicologo/utente/:utenteId" element={<ProtectedRoute ruoli={['PSICOLOGO']}><MonitoraUtentePsicologoPage /></ProtectedRoute>} />
+
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
     );
 }
 
-// ← App non usa più useAuth(), si limita a wrappare con BrowserRouter
 export default function App() {
     return (
         <BrowserRouter>

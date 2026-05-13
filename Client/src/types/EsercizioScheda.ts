@@ -6,5 +6,5 @@ export interface EsercizioScheda {
     serie: number | null;
     ripetizioni: number | null;
     note: string | null;
-    scheda: SchedaAllenamento;
+    schedaAllenamento: SchedaAllenamento;
 }

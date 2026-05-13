@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
 import { getStorico, salvaLog } from '../api/allenamentoApi';
 import type { LogAllenamento } from '../types';
-import { Trophy, X, Calendar, Plus, Trash2, Dumbbell } from 'lucide-react';
+import { Trophy, X, Plus, Trash2, Dumbbell } from 'lucide-react';
 
 interface EsercizioForm {
     id: number;
