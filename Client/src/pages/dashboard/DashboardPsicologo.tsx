@@ -5,6 +5,7 @@ import { getListaUtenti } from '../../api/utenteApi';
 import { getStoricoBenessere } from '../../api/benessereApi';
 import type { Utente } from '../../types';
 import { Users, Activity, BarChart2, ChevronRight } from 'lucide-react';
+import StatCard from '../../components/StatCard';
 
 export default function DashboardPsicologo() {
     const { utente } = useAuth();
@@ -58,52 +59,26 @@ export default function DashboardPsicologo() {
                 </div>
 
                 {/* Grid statistiche */}
-                {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {[1, 2].map(i => (
-                            <div key={i} className="bg-white rounded-xl h-28 animate-pulse" />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <StatCard
+                        title="Pazienti seguiti"
+                        value={utenti.length}
+                        icon={Users}
+                        color="purple"
+                    />
 
-                        <div className="bg-white rounded-xl shadow-sm border-l-4 border-purple-400 p-5
-                                        flex items-center gap-4">
-                            <div className="bg-purple-50 p-3 rounded-xl">
-                                <Users className="w-6 h-6 text-purple-500" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">
-                                    Pazienti seguiti
-                                </p>
-                                <p className="text-3xl font-bold text-slate-800 tabular-nums mt-0.5">
-                                    {utenti.length}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-xl shadow-sm border-l-4 border-emerald-400 p-5
-                                        flex items-center gap-4">
-                            <div className="bg-emerald-50 p-3 rounded-xl relative">
-                                <Activity className="w-6 h-6 text-emerald-500" />
-                                <BarChart2 className="w-3 h-3 text-emerald-400 absolute -bottom-1 -right-1" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">
-                                    Log benessere
-                                </p>
-                                <p className="text-3xl font-bold text-slate-800 tabular-nums mt-0.5">
-                                    {totaleLogs}
-                                </p>
-                                <p className="text-xs text-slate-400 mt-0.5">
-                                    {utenti.length > 0
-                                        ? `di ${utenti[0].nome} ${utenti[0].cognome}`
-                                        : '—'}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    <StatCard
+                        title="Log benessere"
+                        value={totaleLogs}
+                        icon={Activity}
+                        color="emerald"
+                        subtitle={
+                            utenti.length > 0
+                                ? `di ${utenti[0].nome} ${utenti[0].cognome}`
+                                : '—'
+                        }
+                    />
+                </div>
 
                 {/* Sezione pazienti */}
                 <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">

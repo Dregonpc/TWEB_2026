@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getListaUtenti } from '../../api/utenteApi';
 import { getSchedeCoach } from '../../api/allenamentoApi';
+import { getDieteCoach } from '../../api/dietaApi';
 import type { Utente, SchedaAllenamento } from '../../types';
 import { Users, ClipboardList, Salad, Plus, ChevronRight } from 'lucide-react';
+import StatCard from '../../components/StatCard';
 
 export default function DashboardCoach() {
     const { utente } = useAuth();
@@ -12,17 +14,20 @@ export default function DashboardCoach() {
 
     const [utenti, setUtenti] = useState<Utente[]>([]);
     const [schede, setSchede] = useState<SchedaAllenamento[]>([]);
+    const [diete, setDiete] = useState<Dieta[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const caricaDati = async () => {
             try {
-                const [listaUtenti, listaSchede] = await Promise.all([
+                const [listaUtenti, listaSchede, listaDiete] = await Promise.all([
                     getListaUtenti(),
                     getSchedeCoach(),
+                    getDieteCoach(),
                 ]);
                 setUtenti(listaUtenti);
                 setSchede(listaSchede);
+                setDiete(listaDiete);
             } catch (err) {
                 console.error('Errore caricamento dashboard coach:', err);
             } finally {
@@ -52,79 +57,32 @@ export default function DashboardCoach() {
                 </div>
 
                 {/* Grid statistiche */}
-                {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="bg-white rounded-xl h-28 animate-pulse" />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <StatCard
+                        title="Utenti seguiti"
+                        value={utenti.length}
+                        icon={Users}
+                        color="orange"
+                    />
 
-                        <div className="bg-white rounded-xl shadow-sm border-l-4 border-orange-400 p-5
-                                        flex items-center gap-4">
-                            <div className="bg-orange-50 p-3 rounded-xl">
-                                <Users className="w-6 h-6 text-orange-500" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">
-                                    Utenti seguiti
-                                </p>
-                                <p className="text-3xl font-bold text-gray-800 tabular-nums mt-0.5">
-                                    {utenti.length}
-                                </p>
-                            </div>
-                        </div>
+                    <StatCard
+                        title="Schede create"
+                        value={schede.length}
+                        icon={ClipboardList}
+                        color="blue"
+                        actionLabel="+ Nuova"
+                        onAction={() => navigate('/coach/schede')}
+                    />
 
-                        <div className="bg-white rounded-xl shadow-sm border-l-4 border-blue-400 p-5
-                                        flex items-center gap-4">
-                            <div className="bg-blue-50 p-3 rounded-xl">
-                                <ClipboardList className="w-6 h-6 text-blue-500" />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">
-                                    Schede create
-                                </p>
-                                <div className="flex items-center justify-between mt-0.5">
-                                    <p className="text-3xl font-bold text-gray-800 tabular-nums">
-                                        {schede.length}
-                                    </p>
-                                    <button
-                                        onClick={() => navigate('/coach/schede')}
-                                        className="flex items-center gap-1 text-xs text-blue-500
-                                                   hover:text-blue-700 transition-colors cursor-pointer"
-                                    >
-                                        <Plus className="w-3.5 h-3.5" />
-                                        Nuova
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-xl shadow-sm border-l-4 border-emerald-400 p-5
-                                        flex items-center gap-4">
-                            <div className="bg-emerald-50 p-3 rounded-xl">
-                                <Salad className="w-6 h-6 text-emerald-500" />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">
-                                    Diete assegnate
-                                </p>
-                                <div className="flex items-center justify-between mt-0.5">
-                                    <p className="text-3xl font-bold text-gray-800 tabular-nums">—</p>
-                                    <button
-                                        onClick={() => navigate('/coach/dieta')}
-                                        className="flex items-center gap-1 text-xs text-emerald-600
-                                                   hover:text-emerald-800 transition-colors cursor-pointer"
-                                    >
-                                        <Plus className="w-3.5 h-3.5" />
-                                        Nuova
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    <StatCard
+                        title="Diete assegnate"
+                        value={diete.length}
+                        icon={Salad}
+                        color="emerald"
+                        actionLabel="+ Nuova"
+                        onAction={() => navigate('/coach/dieta')}
+                    />
+                </div>
 
                 {/* Sezione utenti */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
