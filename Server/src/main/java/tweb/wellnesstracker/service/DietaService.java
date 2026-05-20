@@ -22,4 +22,9 @@ public class DietaService {
     public List<Dieta> getDieteUtente(Long utenteId) {
         return dietaRepository.findByUtenteId(utenteId);
     }
+
+    // Ritorna tutte le diete di un coach
+    public List<Dieta> getDieteCoach(Long coachId) {
+        return dietaRepository.findByCoachId(coachId);
+    }
 }

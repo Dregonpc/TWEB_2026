@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
-import { creaDieta } from '../api/dietaApi';
+import { creaDieta, getDieteCoach } from '../api/dietaApi';
 import { getListaUtenti } from '../api/utenteApi';
 import type { Dieta, Utente } from '../types';
 import { Salad, Plus, X, User, Save } from 'lucide-react';
@@ -18,8 +18,14 @@ export default function DieteCoachPage() {
     const [utenteId, setUtenteId] = useState('');
 
     useEffect(() => {
-        getListaUtenti()
-            .then(setUtenti)
+        Promise.all([
+            getListaUtenti(),
+            getDieteCoach()
+        ])
+            .then(([utentiData, dieteData]) => {
+                setUtenti(utentiData);
+                setDieteCreate(dieteData);
+            })
             .catch(console.error)
             .finally(() => setLoading(false));
     }, []);
@@ -178,11 +184,11 @@ export default function DieteCoachPage() {
     </div>
     )}
 
-        {/* Lista diete create nella sessione */}
+        {/* Diete del coach */}
         {dieteCreate.length > 0 && (
             <div className="flex flex-col gap-3">
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide">
-                Create in questa sessione
+                Diete assegnate
         </h2>
             {dieteCreate.map(d => (
                 <div key={d.id}

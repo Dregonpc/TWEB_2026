@@ -29,6 +29,22 @@ public class DietaController {
         return ResponseEntity.ok(dietaService.getDieteUtente(utenteLoggato.getId()));
     }
 
+    // GET /api/dieta/coach
+    @GetMapping("/coach")
+    public ResponseEntity<?> getDieteCoach(HttpServletRequest request) {
+        Utente coachLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (coachLoggato == null) {
+            // non c'è una sessione
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!"COACH".equals(coachLoggato.getRuolo()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Accesso riservato ai COACH\"}");
+
+        return ResponseEntity.ok(dietaService.getDieteCoach(coachLoggato.getId()));
+    }
+
     // POST /api/dieta/aggiungiDieta — solo COACH
     @PostMapping("/aggiungiDieta")
     public ResponseEntity<?> creaDieta(@RequestBody Dieta dieta, HttpServletRequest request) {
