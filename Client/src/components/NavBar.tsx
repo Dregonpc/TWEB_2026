@@ -42,6 +42,8 @@ export default function NavBar() {
         COACH: [
             { path: '/dashboard',    label: 'Dashboard',       icon: <LayoutDashboard className="w-4 h-4" /> },
             { path: '/coach/schede', label: 'Gestisci schede', icon: <ClipboardList className="w-4 h-4" /> },
+            { path: '/coach/utenti', label: 'I miei atleti',   icon: <Users className="w-4 h-4" /> },
+            { path: '/coach/dieta',  label: 'Gestisci diete',  icon: <Salad className="w-4 h-4" /> },
         ],
         PSICOLOGO: [
             { path: '/dashboard',        label: 'Dashboard',    icon: <LayoutDashboard className="w-4 h-4" /> },
