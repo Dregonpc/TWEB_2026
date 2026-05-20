@@ -3,6 +3,7 @@ import NavBar from '../components/NavBar';
 import { useAuth } from '../context/AuthContext';
 import { getStoricoBenessere, salvaLogBenessere, getCommentiLogBenessere } from '../api/benessereApi';
 import type { LogBenessere, CommentoBenessere } from '../types';
+import CommentoBenessereComponent from '../components/CommentoBenessereComponent';
 import { Heart, Plus, X, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function LogBenesserePage() {
@@ -12,7 +13,6 @@ export default function LogBenesserePage() {
     const [loading, setLoading] = useState(true);
     const [mostraForm, setMostraForm] = useState(false);
 
-    // Campi form
     const [data, setData] = useState('');
     const [livelloUmore, setLivelloUmore] = useState<number>(5);
     const [livelloSonno, setLivelloSonno] = useState<number>(5);
@@ -21,7 +21,6 @@ export default function LogBenesserePage() {
     const [salvataggio, setSalvataggio] = useState(false);
     const [errore, setErrore] = useState<string | null>(null);
 
-    // Commenti psicologo — caricati on demand
     const [commentiMap, setCommentiMap] = useState<Record<number, CommentoBenessere[]>>({});
     const [loadingCommentiMap, setLoadingCommentiMap] = useState<Record<number, boolean>>({});
     const [commentiAperti, setCommentiAperti] = useState<number | null>(null);
@@ -45,6 +44,7 @@ export default function LogBenesserePage() {
         e.preventDefault();
         setErrore(null);
         setSalvataggio(true);
+
         try {
             const nuovoLog = await salvaLogBenessere({
                 data,
@@ -53,8 +53,8 @@ export default function LogBenesserePage() {
                 livelloStress,
                 noteDiario: noteDiario || null,
             });
+
             setStorico(prev => [nuovoLog, ...prev]);
-            // Reset form
             setData('');
             setLivelloUmore(5);
             setLivelloSonno(5);
@@ -76,7 +76,6 @@ export default function LogBenesserePage() {
 
         setCommentiAperti(logId);
 
-        // Carica commenti solo se non già in cache
         if (!commentiMap[logId]) {
             setLoadingCommentiMap(prev => ({ ...prev, [logId]: true }));
             try {
@@ -90,7 +89,6 @@ export default function LogBenesserePage() {
         }
     };
 
-    // Componente slider riutilizzato per i 3 valori
     const SliderValore = ({
                               id, label, value, onChange, colore
                           }: {
@@ -128,8 +126,6 @@ export default function LogBenesserePage() {
             <NavBar />
 
             <main className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
-
-                {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Heart className="w-6 h-6 text-purple-600" />
@@ -145,7 +141,6 @@ export default function LogBenesserePage() {
                     </button>
                 </div>
 
-                {/* Form nuovo log */}
                 {mostraForm && (
                     <form
                         onSubmit={handleSubmit}
@@ -153,7 +148,6 @@ export default function LogBenesserePage() {
                     >
                         <h2 className="text-lg font-semibold text-gray-700">Registra benessere</h2>
 
-                        {/* Data */}
                         <div className="flex flex-col gap-1.5">
                             <label htmlFor="data" className="text-sm font-semibold text-gray-600">
                                 Data *
@@ -171,7 +165,6 @@ export default function LogBenesserePage() {
                             />
                         </div>
 
-                        {/* Slider valori */}
                         <SliderValore
                             id="umore"
                             label="😊 Umore"
@@ -194,7 +187,6 @@ export default function LogBenesserePage() {
                             colore="text-red-500"
                         />
 
-                        {/* Note diario */}
                         <div className="flex flex-col gap-1.5">
                             <label htmlFor="note" className="text-sm font-semibold text-gray-600">
                                 Note diario <span className="text-gray-400 font-normal">(opzionale)</span>
@@ -211,14 +203,12 @@ export default function LogBenesserePage() {
                             />
                         </div>
 
-                        {/* Errore */}
                         {errore && (
                             <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
                                 {errore}
                             </p>
                         )}
 
-                        {/* Submit */}
                         <button
                             type="submit"
                             disabled={salvataggio}
@@ -230,7 +220,6 @@ export default function LogBenesserePage() {
                     </form>
                 )}
 
-                {/* Storico */}
                 <section className="flex flex-col gap-3">
                     <h2 className="text-lg font-semibold text-gray-700">Storico</h2>
 
@@ -249,7 +238,6 @@ export default function LogBenesserePage() {
                                     key={log.id}
                                     className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
                                 >
-                                    {/* Contenuto log */}
                                     <div className="px-5 py-4 flex flex-col gap-2">
                                         <span className="text-sm font-semibold text-gray-700">
                                             {new Date(log.data).toLocaleDateString('it-IT', {
@@ -260,19 +248,16 @@ export default function LogBenesserePage() {
                                             })}
                                         </span>
 
-                                        {/* Valori */}
                                         <div className="flex gap-4 text-sm text-gray-600">
-                                            {log.livelloUmore  !== null && <span>😊 {log.livelloUmore}/10</span>}
-                                            {log.livelloSonno  !== null && <span>😴 {log.livelloSonno}/10</span>}
+                                            {log.livelloUmore !== null && <span>😊 {log.livelloUmore}/10</span>}
+                                            {log.livelloSonno !== null && <span>😴 {log.livelloSonno}/10</span>}
                                             {log.livelloStress !== null && <span>😰 {log.livelloStress}/10</span>}
                                         </div>
 
-                                        {/* Note diario */}
                                         {log.noteDiario && (
                                             <p className="text-sm text-gray-500 italic">"{log.noteDiario}"</p>
                                         )}
 
-                                        {/* Toggle commenti psicologo */}
                                         <button
                                             onClick={() => toggleCommenti(log.id)}
                                             className="flex items-center gap-1.5 text-xs text-purple-500
@@ -287,36 +272,17 @@ export default function LogBenesserePage() {
                                         </button>
                                     </div>
 
-                                    {/* Sezione commenti */}
                                     {commentiAperti === log.id && (
-                                        <div className="border-t border-gray-100 bg-purple-50 px-5 py-4">
-                                            {loadingCommentiMap[log.id] ? (
-                                                <p className="text-xs text-gray-400">Caricamento commenti...</p>
-                                            ) : !commentiMap[log.id] || commentiMap[log.id].length === 0 ? (
-                                                <p className="text-xs text-gray-400">Nessun commento dello psicologo.</p>
-                                            ) : (
-                                                <ul className="flex flex-col gap-3">
-                                                    {commentiMap[log.id].map((commento) => (
-                                                        <li key={commento.id} className="flex flex-col gap-0.5">
-                                                            <span className="text-xs font-semibold text-purple-700">
-                                                                {commento.psicologo.nome} {commento.psicologo.cognome}
-                                                                <span className="font-normal text-gray-400 ml-2">
-                                                                    {new Date(commento.data).toLocaleDateString('it-IT')}
-                                                                </span>
-                                                            </span>
-                                                            <p className="text-sm text-gray-700">{commento.testo}</p>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            )}
-                                        </div>
+                                        <CommentoBenessereComponent
+                                            commenti={commentiMap[log.id] ?? []}
+                                            loading={loadingCommentiMap[log.id] ?? false}
+                                        />
                                     )}
                                 </li>
                             ))}
                         </ul>
                     )}
                 </section>
-
             </main>
         </div>
     );

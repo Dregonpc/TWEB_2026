@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import NavBar from '../components/NavBar';
-import { getStoricoBenessere, getCommentiLogBenessere, aggiungiCommentoBenessere  } from '../api/benessereApi';
+import { getStoricoBenessere, getCommentiLogBenessere, aggiungiCommentoBenessere } from '../api/benessereApi';
 import type { LogBenessere, CommentoBenessere, Utente } from '../types';
+import CommentoBenessereComponent from '../components/CommentoBenessereComponent';
 import { ArrowLeft, Heart, MessageCircle, ChevronDown, ChevronUp, Send } from 'lucide-react';
 
 export default function MonitoraUtentePsicologoPage() {
@@ -44,7 +45,9 @@ export default function MonitoraUtentePsicologoPage() {
             setCommentiAperti(null);
             return;
         }
+
         setCommentiAperti(logId);
+
         if (!commentiMap[logId]) {
             setLoadingCommentiMap(prev => ({ ...prev, [logId]: true }));
             try {
@@ -61,19 +64,23 @@ export default function MonitoraUtentePsicologoPage() {
     const handleInviaCommento = async (e: React.FormEvent, logId: number) => {
         e.preventDefault();
         if (!testoCommento.trim()) return;
+
         setErroreCommento(null);
         setSalvataggioCommento(true);
+
         try {
             const log = logs.find(l => l.id === logId)!;
-            const nuovoCommento = await aggiungiCommentoBenessere ({
+            const nuovoCommento = await aggiungiCommentoBenessere({
                 testo: testoCommento,
                 data: new Date().toISOString().split('T')[0],
                 logBenessere: log,
             });
+
             setCommentiMap(prev => ({
                 ...prev,
                 [logId]: [...(prev[logId] ?? []), nuovoCommento],
             }));
+
             setTestoCommento('');
             setFormCommentoAperto(null);
         } catch {
@@ -106,8 +113,6 @@ export default function MonitoraUtentePsicologoPage() {
             <NavBar />
 
             <main className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
-
-                {/* Torna indietro */}
                 <button
                     onClick={() => navigate('/dashboard')}
                     className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700
@@ -117,7 +122,6 @@ export default function MonitoraUtentePsicologoPage() {
                     Torna alla dashboard
                 </button>
 
-                {/* Header utente */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-5">
                     <h1 className="text-xl font-bold text-gray-800">
                         {utente.nome} {utente.cognome}
@@ -127,7 +131,6 @@ export default function MonitoraUtentePsicologoPage() {
                     </p>
                 </div>
 
-                {/* Storico benessere */}
                 <section className="flex flex-col gap-3">
                     <div className="flex items-center gap-2">
                         <Heart className="w-5 h-5 text-purple-600" />
@@ -150,7 +153,6 @@ export default function MonitoraUtentePsicologoPage() {
                                     key={log.id}
                                     className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
                                 >
-                                    {/* Info log */}
                                     <div className="px-5 py-4 flex flex-col gap-2">
                                         <span className="text-sm font-semibold text-gray-700">
                                             {new Date(log.data).toLocaleDateString('it-IT', {
@@ -162,8 +164,8 @@ export default function MonitoraUtentePsicologoPage() {
                                         </span>
 
                                         <div className="flex gap-4 text-sm text-gray-600">
-                                            {log.livelloUmore  !== null && <span>😊 {log.livelloUmore}/10</span>}
-                                            {log.livelloSonno  !== null && <span>😴 {log.livelloSonno}/10</span>}
+                                            {log.livelloUmore !== null && <span>😊 {log.livelloUmore}/10</span>}
+                                            {log.livelloSonno !== null && <span>😴 {log.livelloSonno}/10</span>}
                                             {log.livelloStress !== null && <span>😰 {log.livelloStress}/10</span>}
                                         </div>
 
@@ -171,7 +173,6 @@ export default function MonitoraUtentePsicologoPage() {
                                             <p className="text-sm text-gray-500 italic">"{log.noteDiario}"</p>
                                         )}
 
-                                        {/* Azioni */}
                                         <div className="flex items-center gap-4 mt-1">
                                             <button
                                                 onClick={() => toggleCommenti(log.id)}
@@ -202,62 +203,46 @@ export default function MonitoraUtentePsicologoPage() {
                                         </div>
                                     </div>
 
-                                    {/* Sezione commenti */}
                                     {commentiAperti === log.id && (
-                                        <div className="border-t border-gray-100 bg-purple-50 px-5 py-4 flex flex-col gap-3">
+                                        <>
+                                            <CommentoBenessereComponent
+                                                commenti={commentiMap[log.id] ?? []}
+                                                loading={loadingCommentiMap[log.id] ?? false}
+                                            />
 
-                                            {loadingCommentiMap[log.id] ? (
-                                                <p className="text-xs text-gray-400">Caricamento...</p>
-                                            ) : !commentiMap[log.id] || commentiMap[log.id].length === 0 ? (
-                                                <p className="text-xs text-gray-400">Nessun commento.</p>
-                                            ) : (
-                                                <ul className="flex flex-col gap-3">
-                                                    {commentiMap[log.id].map((commento) => (
-                                                        <li key={commento.id} className="flex flex-col gap-0.5">
-                                                            <span className="text-xs font-semibold text-purple-700">
-                                                                {commento.psicologo.nome} {commento.psicologo.cognome}
-                                                                <span className="font-normal text-gray-400 ml-2">
-                                                                    {new Date(commento.data).toLocaleDateString('it-IT')}
-                                                                </span>
-                                                            </span>
-                                                            <p className="text-sm text-gray-700">{commento.testo}</p>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            )}
-
-                                            {/* Form nuovo commento */}
                                             {formCommentoAperto === log.id && (
-                                                <form
-                                                    onSubmit={(e) => handleInviaCommento(e, log.id)}
-                                                    className="flex flex-col gap-2 pt-2 border-t border-purple-100"
-                                                >
-                                                    <textarea
-                                                        value={testoCommento}
-                                                        onChange={(e) => setTestoCommento(e.target.value)}
-                                                        placeholder="Scrivi un commento per questo log..."
-                                                        rows={2}
-                                                        required
-                                                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm
-                                                                   resize-none focus:outline-none focus:border-purple-600
-                                                                   focus:ring-1 focus:ring-purple-600 transition-colors bg-white"
-                                                    />
-                                                    {erroreCommento && (
-                                                        <p className="text-xs text-red-600">{erroreCommento}</p>
-                                                    )}
-                                                    <button
-                                                        type="submit"
-                                                        disabled={salvataggioCommento}
-                                                        className="self-end flex items-center gap-2 text-sm bg-purple-600
-                                                                   hover:bg-purple-700 disabled:opacity-50 text-white
-                                                                   font-semibold px-4 py-2 rounded-lg transition-colors cursor-pointer"
+                                                <div className="px-5 py-4 border-t border-purple-100 bg-white">
+                                                    <form
+                                                        onSubmit={(e) => handleInviaCommento(e, log.id)}
+                                                        className="flex flex-col gap-2"
                                                     >
-                                                        <Send className="w-3.5 h-3.5" />
-                                                        {salvataggioCommento ? 'Invio...' : 'Invia'}
-                                                    </button>
-                                                </form>
+                                                        <textarea
+                                                            value={testoCommento}
+                                                            onChange={(e) => setTestoCommento(e.target.value)}
+                                                            placeholder="Scrivi un commento per questo log..."
+                                                            rows={2}
+                                                            required
+                                                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm
+                                                                       resize-none focus:outline-none focus:border-purple-600
+                                                                       focus:ring-1 focus:ring-purple-600 transition-colors bg-white"
+                                                        />
+                                                        {erroreCommento && (
+                                                            <p className="text-xs text-red-600">{erroreCommento}</p>
+                                                        )}
+                                                        <button
+                                                            type="submit"
+                                                            disabled={salvataggioCommento}
+                                                            className="self-end flex items-center gap-2 text-sm bg-purple-600
+                                                                       hover:bg-purple-700 disabled:opacity-50 text-white
+                                                                       font-semibold px-4 py-2 rounded-lg transition-colors cursor-pointer"
+                                                        >
+                                                            <Send className="w-3.5 h-3.5" />
+                                                            {salvataggioCommento ? 'Invio...' : 'Invia'}
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             )}
-                                        </div>
+                                        </>
                                     )}
                                 </li>
                             ))}
