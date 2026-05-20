@@ -4,10 +4,12 @@ import { useAuth } from '../../context/AuthContext';
 import { getStorico } from '../../api/allenamentoApi';
 import { getStoricoBenessere } from '../../api/benessereApi';
 import { getDieteUtente } from '../../api/dietaApi';
+import { getSchedeUtente } from '../../api/allenamentoApi';
 import type {
     LogAllenamento,
     LogBenessere,
-    Dieta
+    Dieta,
+    SchedaAllenamento
 } from '../../types';
 import {
     Dumbbell,
@@ -15,7 +17,8 @@ import {
     Salad,
     ChevronRight,
     Smile,
-    Moon
+    Moon,
+    ClipboardList
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 
@@ -25,6 +28,7 @@ export default function DashboardUser() {
 
     const [allenamenti, setAllenamenti] = useState<LogAllenamento[]>([]);
     const [benessere, setBenessere] = useState<LogBenessere[]>([]);
+    const [schede, setSchede] = useState<Scheda[]>([]);
     const [diete, setDiete] = useState<Dieta[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -34,15 +38,18 @@ export default function DashboardUser() {
                 const [
                     listaAllenamenti,
                     listaBenessere,
+                    listaSchede,
                     listaDiete
                 ] = await Promise.all([
                     getStorico(),
                     getStoricoBenessere(utente!.id),
+                    getSchedeUtente(),
                     getDieteUtente(),
                 ]);
 
                 setAllenamenti(listaAllenamenti);
                 setBenessere(listaBenessere);
+                setSchede(listaSchede);
                 setDiete(listaDiete);
             } catch (err) {
                 console.error('Errore caricamento dashboard:', err);
@@ -136,7 +143,7 @@ export default function DashboardUser() {
             </div>
 
             {/* Card principali */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {/* Allenamenti */}
                 <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-4">
@@ -261,6 +268,76 @@ export default function DashboardUser() {
                                    text-white font-semibold rounded-lg py-2 transition-colors"
                     >
                         + Registra benessere
+                    </Link>
+
+                </section>
+
+                {/* Schede */}
+                <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-4 min-h-[320px]">
+
+                    <div className="flex items-center justify-between">
+
+                        <div className="flex items-center gap-2 text-blue-600 font-semibold">
+                            <ClipboardList className="w-5 h-5" />
+                            <span>Schede</span>
+                        </div>
+
+                        <Link
+                            to="/schede"
+                            className="text-xs text-blue-500 hover:underline flex items-center gap-0.5"
+                        >
+                            Vedi tutte
+                            <ChevronRight className="w-3 h-3" />
+                        </Link>
+                    </div>
+
+                    {schede.length === 0 ? (
+
+                        <p className="text-sm text-gray-400">
+                            Nessuna scheda assegnata dal coach.
+                        </p>
+
+                    ) : (
+
+                        <ul className="flex flex-col gap-3">
+
+                            {schede.slice(0, 3).map((scheda) => (
+
+                                <li
+                                    key={scheda.id}
+                                    className="flex flex-col gap-1 border-b border-gray-50 pb-3 last:border-0"
+                                >
+
+                                    {/* Titolo */}
+                                    <span className="text-sm font-semibold text-gray-800">
+                                        {scheda.titolo}
+                                    </span>
+
+                                    {/* Coach */}
+                                    {scheda.coach && (
+                                        <span className="text-xs text-blue-500 font-medium">
+                                            Coach: {scheda.coach.nome}
+                                        </span>
+                                    )}
+
+                                    {/* Descrizione */}
+                                    {scheda.note && (
+                                        <span className="text-xs text-gray-400 line-clamp-2">
+                                            {scheda.note}
+                                        </span>
+                                    )}
+
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+
+                    <Link
+                        to="/schede"
+                        className="mt-auto text-center text-sm bg-blue-600 hover:bg-blue-700
+                                   text-white font-semibold rounded-lg py-2 transition-colors"
+                    >
+                        Vedi schede
                     </Link>
 
                 </section>
