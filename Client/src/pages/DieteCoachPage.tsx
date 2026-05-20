@@ -48,7 +48,11 @@ export default function DieteCoachPage() {
                 descrizione,
                 utente: { id: parseInt(utenteId) } as Utente,
             });
-            setDieteCreate(prev => [nuovaDieta, ...prev]);
+
+            // refresh completo delle diete
+            const dieteAggiornate = await getDieteCoach();
+            setDieteCreate(dieteAggiornate);
+
             resetForm();
         } catch {
             alert('Errore durante il salvataggio della dieta');
