@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
 import CommentoAllenamentoComponent from '../components/CommentoAllenamentoComponent';
-import { getStorico, salvaLog, getCommentiLog } from '../api/allenamentoApi';
-import type { LogAllenamento, CommentoAllenamento } from '../types';
+import {
+    getStorico,
+    salvaLog,
+    getCommentiLog,
+    getEserciziLog,
+    aggiungiEsercizioSvolto
+} from '../api/allenamentoApi';
+import type {
+    LogAllenamento,
+    CommentoAllenamento,
+    EsercizioSvolto
+} from '../types';
 import {
     Trophy,
     X,
@@ -11,7 +21,8 @@ import {
     Dumbbell,
     MessageCircle,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    ClipboardList
 } from 'lucide-react';
 
 interface EsercizioForm {
@@ -51,6 +62,7 @@ function ExerciseCard({
                 <span className="text-sm font-semibold text-slate-600">
                     Esercizio {index + 1}
                 </span>
+
                 <button
                     type="button"
                     onClick={() => onRemove(esercizio.id)}
@@ -80,7 +92,7 @@ function ExerciseCard({
                     { field: 'serie', label: 'Serie', placeholder: 'es. 4' },
                     { field: 'ripetizioni', label: 'Ripetizioni', placeholder: 'es. 10' },
                     { field: 'peso', label: 'Peso (kg)', placeholder: 'es. 80' },
-                    { field: 'durata', label: 'Durata (min)', placeholder: 'es. 5' },
+                    { field: 'durata', label: 'Durata (sec)', placeholder: 'es. 60' },
                 ].map(({ field, label, placeholder }) => (
                     <div key={field} className="flex flex-col gap-1">
                         <label className="text-xs text-slate-400">{label}</label>
@@ -128,6 +140,10 @@ export default function LogAllenamentoPage() {
     const [loadingCommentiMap, setLoadingCommentiMap] = useState<Record<number, boolean>>({});
     const [commentiAperti, setCommentiAperti] = useState<number | null>(null);
 
+    const [eserciziMap, setEserciziMap] = useState<Record<number, EsercizioSvolto[]>>({});
+    const [loadingEserciziMap, setLoadingEserciziMap] = useState<Record<number, boolean>>({});
+    const [eserciziAperti, setEserciziAperti] = useState<number | null>(null);
+
     useEffect(() => {
         caricaStorico();
     }, []);
@@ -164,32 +180,24 @@ export default function LogAllenamentoPage() {
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSalvataggio(true);
+    const toggleEsercizi = async (logId: number) => {
+        if (eserciziAperti === logId) {
+            setEserciziAperti(null);
+            return;
+        }
 
-        try {
-            const logDaSalvare = {
-                data,
-                note: note || null,
-                eserciziSvolti: esercizi.map(ex => ({
-                    nomeEsercizio: ex.nomeEsercizio,
-                    serie: ex.serie ? parseInt(ex.serie) : null,
-                    ripetizioni: ex.ripetizioni ? parseInt(ex.ripetizioni) : null,
-                    peso: ex.peso ? parseFloat(ex.peso) : null,
-                    durata: ex.durata ? parseInt(ex.durata) : null,
-                    note: ex.commento || null
-                }))
-            };
+        setEserciziAperti(logId);
 
-            const nuovoLog = await salvaLog(logDaSalvare);
-            setStorico(prev => [nuovoLog, ...prev]);
-            setMostraModal(false);
-            resetForm();
-        } catch {
-            setErrore('Errore nel salvataggio.');
-        } finally {
-            setSalvataggio(false);
+        if (!eserciziMap[logId]) {
+            setLoadingEserciziMap(prev => ({ ...prev, [logId]: true }));
+            try {
+                const eserciziLog = await getEserciziLog(logId);
+                setEserciziMap(prev => ({ ...prev, [logId]: eserciziLog }));
+            } catch (err) {
+                console.error('Errore caricamento esercizi:', err);
+            } finally {
+                setLoadingEserciziMap(prev => ({ ...prev, [logId]: false }));
+            }
         }
     };
 
@@ -199,6 +207,46 @@ export default function LogAllenamentoPage() {
         setEsercizi([esercizioVuoto(1)]);
         setNextId(2);
         setErrore(null);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSalvataggio(true);
+        setErrore(null);
+
+        try {
+            const eserciziValidi = esercizi.filter(ex => ex.nomeEsercizio.trim() !== '');
+
+            if (!data) throw new Error('Inserisci la data');
+            if (eserciziValidi.length === 0) throw new Error('Inserisci almeno un esercizio');
+
+            const nuovoLog = await salvaLog({
+                data,
+                note: note.trim() || null,
+            });
+
+            await Promise.all(
+                eserciziValidi.map(ex =>
+                    aggiungiEsercizioSvolto({
+                        nomeEsercizio: ex.nomeEsercizio.trim(),
+                        serie: ex.serie ? parseInt(ex.serie, 10) : null,
+                        ripetizioni: ex.ripetizioni ? parseInt(ex.ripetizioni, 10) : null,
+                        peso: ex.peso ? parseInt(ex.peso, 10) : null,
+                        durata: ex.durata ? parseInt(ex.durata, 10) : null,
+                        commento: ex.commento || null,
+                        logAllenamento: { id: nuovoLog.id } as LogAllenamento,
+                    } as Partial<EsercizioSvolto>)
+                )
+            );
+
+            await caricaStorico();
+            setMostraModal(false);
+            resetForm();
+        } catch (err) {
+            setErrore(err instanceof Error ? err.message : 'Errore nel salvataggio.');
+        } finally {
+            setSalvataggio(false);
+        }
     };
 
     return (
@@ -236,7 +284,7 @@ export default function LogAllenamentoPage() {
                                     key={log.id}
                                     className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
                                 >
-                                    <div className="px-5 py-4 flex flex-col gap-2">
+                                    <div className="px-5 py-4 flex flex-col gap-3">
                                         <span className="text-sm font-bold text-slate-700">
                                             {new Date(log.data).toLocaleDateString('it-IT', {
                                                 weekday: 'long',
@@ -249,19 +297,84 @@ export default function LogAllenamentoPage() {
                                             {log.note || 'Nessuna nota'}
                                         </span>
 
-                                        <button
-                                            onClick={() => toggleCommenti(log.id)}
-                                            className="mt-1 flex items-center gap-1.5 text-xs text-green-600 hover:text-green-800 transition-colors w-fit cursor-pointer"
-                                        >
-                                            <MessageCircle className="w-3.5 h-3.5" />
-                                            Commenti del coach
-                                            {commentiAperti === log.id ? (
-                                                <ChevronUp className="w-3 h-3" />
-                                            ) : (
-                                                <ChevronDown className="w-3 h-3" />
-                                            )}
-                                        </button>
+                                        <div className="flex flex-wrap gap-3">
+                                            <button
+                                                onClick={() => toggleEsercizi(log.id)}
+                                                className="mt-1 flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-800 transition-colors w-fit cursor-pointer"
+                                            >
+                                                <ClipboardList className="w-3.5 h-3.5" />
+                                                Esercizi svolti
+                                                {eserciziAperti === log.id ? (
+                                                    <ChevronUp className="w-3 h-3" />
+                                                ) : (
+                                                    <ChevronDown className="w-3 h-3" />
+                                                )}
+                                            </button>
+
+                                            <button
+                                                onClick={() => toggleCommenti(log.id)}
+                                                className="mt-1 flex items-center gap-1.5 text-xs text-green-600 hover:text-green-800 transition-colors w-fit cursor-pointer"
+                                            >
+                                                <MessageCircle className="w-3.5 h-3.5" />
+                                                Commenti del coach
+                                                {commentiAperti === log.id ? (
+                                                    <ChevronUp className="w-3 h-3" />
+                                                ) : (
+                                                    <ChevronDown className="w-3 h-3" />
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
+
+                                    {eserciziAperti === log.id && (
+                                        <div className="border-t border-slate-100 bg-slate-50 px-5 py-4 flex flex-col gap-3">
+                                            {loadingEserciziMap[log.id] ? (
+                                                <p className="text-xs text-slate-400">
+                                                    Caricamento esercizi...
+                                                </p>
+                                            ) : (eserciziMap[log.id] ?? []).length === 0 ? (
+                                                <p className="text-xs text-slate-400">
+                                                    Nessun esercizio trovato.
+                                                </p>
+                                            ) : (
+                                                <div className="flex flex-col gap-2">
+                                                    {(eserciziMap[log.id] ?? []).map((esercizio) => (
+                                                        <div
+                                                            key={esercizio.id}
+                                                            className="rounded-xl border border-slate-200 bg-white px-4 py-3"
+                                                        >
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className="text-sm font-semibold text-slate-700">
+                                                                    {esercizio.nomeEsercizio}
+                                                                </span>
+
+                                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                                                                    {esercizio.serie != null && (
+                                                                        <span>Serie: {esercizio.serie}</span>
+                                                                    )}
+                                                                    {esercizio.ripetizioni != null && (
+                                                                        <span>Ripetizioni: {esercizio.ripetizioni}</span>
+                                                                    )}
+                                                                    {esercizio.peso != null && (
+                                                                        <span>Peso: {esercizio.peso} kg</span>
+                                                                    )}
+                                                                    {esercizio.durata != null && (
+                                                                        <span>Durata: {esercizio.durata} sec</span>
+                                                                    )}
+                                                                </div>
+
+                                                                {esercizio.commento && (
+                                                                    <p className="text-xs text-slate-400 italic">
+                                                                        {esercizio.commento}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {commentiAperti === log.id && (
                                         <CommentoAllenamentoComponent
@@ -328,7 +441,9 @@ export default function LogAllenamentoPage() {
                                         esercizio={ex}
                                         index={i}
                                         onRemove={(id) =>
-                                            setEsercizi(esercizi.filter(e => e.id !== id))
+                                            setEsercizi(esercizi.length > 1
+                                                ? esercizi.filter(e => e.id !== id)
+                                                : esercizi)
                                         }
                                         onChange={(id, f, v) =>
                                             setEsercizi(esercizi.map(e =>

@@ -4,6 +4,7 @@ import type {
     SchedaAllenamento,
     EsercizioScheda,
     CommentoAllenamento,
+    EsercizioSvolto,
 } from '../types';
 
 // USER
@@ -18,6 +19,17 @@ export const salvaLog = (log: Partial<LogAllenamento>) =>
         method: 'POST',
         body: JSON.stringify(log),
     });
+
+// POST /api/allenamento/nuovoEsercizioSvolto
+export const aggiungiEsercizioSvolto = (esercizio: Partial<EsercizioSvolto>) =>
+    apiFetch<EsercizioSvolto>('/api/allenamento/nuovoEsercizioSvolto', {
+        method: 'POST',
+        body: JSON.stringify(esercizio),
+    });
+
+// GET /api/allenamento/log/{logId}/esercizi
+export const getEserciziLog = (logId: number) =>
+    apiFetch<EsercizioSvolto[]>(`/api/allenamento/log/${logId}/esercizi`);
 
 // GET /api/allenamento/schedeUtente
 export const getSchedeUtente = () =>
@@ -49,6 +61,10 @@ export const creaScheda = (scheda: Partial<SchedaAllenamento>) =>
         method: 'POST',
         body: JSON.stringify(scheda),
     });
+
+// GET /api/allenamento/storicoCoach?utenteId=X
+export const getStoricoCoachUtente = (utenteId: number) =>
+    apiFetch(`/api/allenamento/storicoCoach?utenteId=${utenteId}`);
 
 // POST /api/allenamento/nuovoEsercizioScheda
 export const aggiungiEsercizioScheda = (esercizio: Partial<EsercizioScheda>) =>

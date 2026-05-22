@@ -4,8 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { getListaUtenti } from '../../api/utenteApi';
 import { getSchedeCoach } from '../../api/allenamentoApi';
 import { getDieteCoach } from '../../api/dietaApi';
-import type { Utente, SchedaAllenamento } from '../../types';
-import { Users, ClipboardList, Salad, Plus, ChevronRight } from 'lucide-react';
+import type { Utente, SchedaAllenamento, Dieta } from '../../types';
+import { Users, ClipboardList, Salad, ChevronRight } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 
 export default function DashboardCoach() {

@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getListaUtenti } from '../../api/utenteApi';
 import { getStoricoBenessere } from '../../api/benessereApi';
 import type { Utente } from '../../types';
-import { Users, Activity, BarChart2, ChevronRight } from 'lucide-react';
+import { Users, Activity, ChevronRight } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 
 export default function DashboardPsicologo() {

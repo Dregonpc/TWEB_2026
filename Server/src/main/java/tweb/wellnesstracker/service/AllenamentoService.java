@@ -39,9 +39,19 @@ public class AllenamentoService {
         return salvato;
     }
 
+    // Salva l'esrcizio di un allenamento di un utente
+    public EsercizioSvolto salvaEsercizioSvolto(EsercizioSvolto esercizio) {
+        return esercizioRepository.save(esercizio);
+    }
+
     // Ritorna tutti gli allenamenti di un utente
     public List<LogAllenamento> getStoricoUtente(Long utenteId) {
         return logRepository.findByUtenteIdOrderByDataDesc(utenteId);
+    }
+
+    // Ritorna tutti gli esercizi di un allenamento
+    public List<EsercizioSvolto> getEserciziLog(Long logId) {
+        return esercizioRepository.findByLogAllenamentoId(logId);
     }
 
     // Filtra lo storico tenendo solo gli ultimi 7 giorni

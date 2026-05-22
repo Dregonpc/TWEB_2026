@@ -28,7 +28,7 @@ export default function DashboardUser() {
 
     const [allenamenti, setAllenamenti] = useState<LogAllenamento[]>([]);
     const [benessere, setBenessere] = useState<LogBenessere[]>([]);
-    const [schede, setSchede] = useState<Scheda[]>([]);
+    const [schede, setSchede] = useState<SchedaAllenamento[]>([]);
     const [diete, setDiete] = useState<Dieta[]>([]);
     const [loading, setLoading] = useState(true);
 
