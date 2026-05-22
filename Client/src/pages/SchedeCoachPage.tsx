@@ -1,9 +1,22 @@
 import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
-import { getSchedeCoach, creaScheda, aggiungiEsercizioScheda } from '../api/allenamentoApi';
+import {
+    getSchedeCoach,
+    creaScheda,
+    aggiungiEsercizioScheda,
+    getEserciziScheda
+} from '../api/allenamentoApi';
 import { getListaUtenti } from '../api/utenteApi';
-import type { SchedaAllenamento, Utente } from '../types';
-import { ClipboardList, Plus, X, Trash2, UserPlus } from 'lucide-react';
+import type { SchedaAllenamento, Utente, EsercizioScheda } from '../types';
+import {
+    ClipboardList,
+    Plus,
+    X,
+    Trash2,
+    UserPlus,
+    ChevronDown,
+    ChevronUp
+} from 'lucide-react';
 
 interface EsercizioSchedaForm {
     id: number;
@@ -21,7 +34,12 @@ const esercizioVuoto = (id: number): EsercizioSchedaForm => ({
     note: '',
 });
 
-function ExerciseCard({ esercizio, index, onChange, onRemove }: {
+function ExerciseCard({
+                          esercizio,
+                          index,
+                          onChange,
+                          onRemove
+                      }: {
     esercizio: EsercizioSchedaForm;
     index: number;
     onChange: (id: number, field: keyof EsercizioSchedaForm, value: string) => void;
@@ -30,13 +48,16 @@ function ExerciseCard({ esercizio, index, onChange, onRemove }: {
     return (
         <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-600">Esercizio {index + 1}</span>
+                <span className="text-sm font-semibold text-slate-600">
+                    Esercizio {index + 1}
+                </span>
                 <button
                     type="button"
                     onClick={() => onRemove(esercizio.id)}
                     className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600 transition-colors cursor-pointer"
                 >
-                    <Trash2 className="w-3.5 h-3.5" /> Rimuovi
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Rimuovi
                 </button>
             </div>
 
@@ -64,7 +85,9 @@ function ExerciseCard({ esercizio, index, onChange, onRemove }: {
                         <input
                             type="number"
                             value={esercizio[field as keyof EsercizioSchedaForm]}
-                            onChange={(e) => onChange(esercizio.id, field as keyof EsercizioSchedaForm, e.target.value)}
+                            onChange={(e) =>
+                                onChange(esercizio.id, field as keyof EsercizioSchedaForm, e.target.value)
+                            }
                             placeholder={placeholder}
                             min={0}
                             className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
@@ -91,6 +114,7 @@ export default function SchedeCoachPage() {
     const [schede, setSchede] = useState<SchedaAllenamento[]>([]);
     const [utenti, setUtenti] = useState<Utente[]>([]);
     const [loading, setLoading] = useState(true);
+
     const [mostraModal, setMostraModal] = useState(false);
     const [titolo, setTitolo] = useState('');
     const [utenteId, setUtenteId] = useState('');
@@ -99,6 +123,10 @@ export default function SchedeCoachPage() {
     const [nextId, setNextId] = useState(2);
     const [salvataggio, setSalvataggio] = useState(false);
     const [errore, setErrore] = useState<string | null>(null);
+
+    const [eserciziSchedaMap, setEserciziSchedaMap] = useState<Record<number, EsercizioScheda[]>>({});
+    const [loadingEserciziMap, setLoadingEserciziMap] = useState<Record<number, boolean>>({});
+    const [schedaAperta, setSchedaAperta] = useState<number | null>(null);
 
     useEffect(() => {
         caricaDati();
@@ -110,12 +138,38 @@ export default function SchedeCoachPage() {
                 getSchedeCoach(),
                 getListaUtenti(),
             ]);
-            setSchede(listaSchede);
-            setUtenti(listaUtenti);
+
+            setSchede(listaSchede as SchedaAllenamento[]);
+            setUtenti(listaUtenti as Utente[]);
         } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const toggleEserciziScheda = async (schedaId: number) => {
+        if (schedaAperta === schedaId) {
+            setSchedaAperta(null);
+            return;
+        }
+
+        setSchedaAperta(schedaId);
+
+        if (!eserciziSchedaMap[schedaId]) {
+            setLoadingEserciziMap(prev => ({ ...prev, [schedaId]: true }));
+
+            try {
+                const esercizi = await getEserciziScheda(schedaId);
+                setEserciziSchedaMap(prev => ({
+                    ...prev,
+                    [schedaId]: esercizi as EsercizioScheda[]
+                }));
+            } catch (err) {
+                console.error('Errore caricamento esercizi scheda:', err);
+            } finally {
+                setLoadingEserciziMap(prev => ({ ...prev, [schedaId]: false }));
+            }
         }
     };
 
@@ -158,7 +212,7 @@ export default function SchedeCoachPage() {
                         serie: ex.serie ? parseInt(ex.serie, 10) : null,
                         ripetizioni: ex.ripetizioni ? parseInt(ex.ripetizioni, 10) : null,
                         note: ex.note || null,
-                        schedaAllenamento: { id: nuovaScheda.id } as SchedaAllenamento,
+                        schedaAllenamento: { id: (nuovaScheda as SchedaAllenamento).id } as SchedaAllenamento,
                     } as any)
                 )
             );
@@ -167,7 +221,11 @@ export default function SchedeCoachPage() {
             setMostraModal(false);
             resetForm();
         } catch (err) {
-            setErrore(err instanceof Error ? err.message : 'Errore nel salvataggio della scheda.');
+            setErrore(
+                err instanceof Error
+                    ? err.message
+                    : 'Errore nel salvataggio della scheda.'
+            );
         } finally {
             setSalvataggio(false);
         }
@@ -176,16 +234,20 @@ export default function SchedeCoachPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             <NavBar />
+
             <main className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <ClipboardList className="text-emerald-700" /> Gestione schede
+                        <ClipboardList className="text-emerald-700" />
+                        Gestione schede
                     </h1>
+
                     <button
                         onClick={() => setMostraModal(true)}
                         className="bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold shadow-sm flex items-center gap-2"
                     >
-                        <Plus size={18} /> Nuova scheda
+                        <Plus size={18} />
+                        Nuova scheda
                     </button>
                 </div>
 
@@ -200,12 +262,80 @@ export default function SchedeCoachPage() {
                     ) : (
                         <ul className="flex flex-col gap-3">
                             {schede.map((scheda) => (
-                                <li key={scheda.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 px-5 py-4 flex flex-col">
-                                    <span className="text-sm font-bold text-slate-700">{scheda.titolo}</span>
-                                    <span className="text-sm text-slate-500">
-                                        {scheda.utente?.nome} {scheda.utente?.cognome}
-                                    </span>
-                                    <span className="text-sm text-slate-400">{scheda.note || 'Nessuna nota'}</span>
+                                <li
+                                    key={scheda.id}
+                                    className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+                                >
+                                    <div className="px-5 py-4 flex flex-col gap-2">
+                                        <span className="text-sm font-bold text-slate-700">
+                                            {scheda.titolo}
+                                        </span>
+
+                                        <span className="text-sm text-slate-500">
+                                            {scheda.utente?.nome} {scheda.utente?.cognome}
+                                        </span>
+
+                                        <span className="text-sm text-slate-400">
+                                            {scheda.note || 'Nessuna nota'}
+                                        </span>
+
+                                        <button
+                                            onClick={() => toggleEserciziScheda(scheda.id)}
+                                            className="mt-1 flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors w-fit cursor-pointer"
+                                        >
+                                            <ClipboardList className="w-3.5 h-3.5" />
+                                            Esercizi della scheda
+                                            {schedaAperta === scheda.id ? (
+                                                <ChevronUp className="w-3 h-3" />
+                                            ) : (
+                                                <ChevronDown className="w-3 h-3" />
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    {schedaAperta === scheda.id && (
+                                        <div className="border-t border-gray-100 bg-slate-50 px-5 py-4 flex flex-col gap-3">
+                                            {loadingEserciziMap[scheda.id] ? (
+                                                <p className="text-xs text-gray-400">
+                                                    Caricamento esercizi...
+                                                </p>
+                                            ) : (eserciziSchedaMap[scheda.id] ?? []).length === 0 ? (
+                                                <p className="text-xs text-gray-400">
+                                                    Nessun esercizio nella scheda.
+                                                </p>
+                                            ) : (
+                                                <div className="flex flex-col gap-2">
+                                                    {(eserciziSchedaMap[scheda.id] ?? []).map((es: any) => (
+                                                        <div
+                                                            key={es.id}
+                                                            className="rounded-xl border border-slate-200 bg-white px-4 py-3"
+                                                        >
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className="text-sm font-semibold text-slate-700">
+                                                                    {es.nomeEsercizio}
+                                                                </span>
+
+                                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                                                                    {es.serie != null && (
+                                                                        <span>Serie: {es.serie}</span>
+                                                                    )}
+                                                                    {es.ripetizioni != null && (
+                                                                        <span>Ripetizioni: {es.ripetizioni}</span>
+                                                                    )}
+                                                                </div>
+
+                                                                {es.note && (
+                                                                    <p className="text-xs text-slate-400 italic">
+                                                                        {es.note}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </li>
                             ))}
                         </ul>
@@ -219,9 +349,14 @@ export default function SchedeCoachPage() {
                         <form onSubmit={handleSubmit} className="p-6 md:p-8 flex flex-col gap-6">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold flex items-center gap-2">
-                                    <UserPlus className="text-emerald-600" /> Crea scheda
+                                    <UserPlus className="text-emerald-600" />
+                                    Crea scheda
                                 </h2>
-                                <button type="button" onClick={closeModal} className="text-slate-700 hover:text-slate-900">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="text-slate-700 hover:text-slate-900"
+                                >
                                     <X />
                                 </button>
                             </div>
@@ -235,6 +370,7 @@ export default function SchedeCoachPage() {
                                     required
                                     className="border p-2 rounded-lg text-sm"
                                 />
+
                                 <select
                                     value={utenteId}
                                     onChange={e => setUtenteId(e.target.value)}
@@ -278,15 +414,27 @@ export default function SchedeCoachPage() {
                                         key={ex.id}
                                         esercizio={ex}
                                         index={i}
-                                        onRemove={(id) => setEsercizi(esercizi.length > 1 ? esercizi.filter(e => e.id !== id) : esercizi)}
+                                        onRemove={(id) =>
+                                            setEsercizi(
+                                                esercizi.length > 1
+                                                    ? esercizi.filter(e => e.id !== id)
+                                                    : esercizi
+                                            )
+                                        }
                                         onChange={(id, field, value) =>
-                                            setEsercizi(esercizi.map(e => e.id === id ? { ...e, [field]: value } : e))
+                                            setEsercizi(
+                                                esercizi.map(e =>
+                                                    e.id === id ? { ...e, [field]: value } : e
+                                                )
+                                            )
                                         }
                                     />
                                 ))}
                             </div>
 
-                            {errore && <p className="text-sm text-red-500">{errore}</p>}
+                            {errore && (
+                                <p className="text-sm text-red-500">{errore}</p>
+                            )}
 
                             <button
                                 type="submit"
