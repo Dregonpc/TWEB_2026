@@ -36,6 +36,25 @@ public class BenessereController {
         return ResponseEntity.ok(benessereService.salvaLogBenessere(log));
     }
 
+    // DELETE /api/benessere/log/{logId} — elimina un log dell'utente loggato
+    @DeleteMapping("/log/{logId}")
+    public ResponseEntity<?> eliminaLog(@PathVariable Long logId, HttpServletRequest request) {
+        Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (utenteLoggato == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        try {
+            benessereService.eliminaLog(logId, utenteLoggato.getId());
+            return ResponseEntity.noContent().build(); // 204
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"errore\": \"Log non trovato\"}");
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Non puoi eliminare questo log\"}");
+        }
+    }
+
+
     // POST /api/benessere/commento — solo PSICOLOGO
     @PostMapping("/commento")
     public ResponseEntity<?> aggiungiCommento(@RequestBody CommentoBenessere commento, HttpServletRequest request) {

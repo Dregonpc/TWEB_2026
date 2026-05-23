@@ -2,6 +2,7 @@ package tweb.wellnesstracker.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tweb.wellnesstracker.persistence.*;
 import tweb.wellnesstracker.repository.*;
 
@@ -20,6 +21,24 @@ public class BenessereService {
     public LogBenessere salvaLogBenessere(LogBenessere log) {
         return benessereRepository.save(log);
     }
+
+    // Elimina un log benessere (prima rimuove i commenti, poi il log)
+    @Transactional
+    public void eliminaLog(Long logId, Long utenteId) {
+        LogBenessere log = benessereRepository.findById(logId).orElseThrow(() -> new IllegalArgumentException("Log non trovato: " + logId));
+
+        // Verifica che il log appartenga all'utente che ha fatto la richiesta
+        if (!log.getUtente().getId().equals(utenteId)) {
+            throw new SecurityException("Non autorizzato a eliminare questo log");
+        }
+
+        // Prima elimina i commenti (evita violazioni FK)
+        commentoRepository.deleteByLogBenessereId(logId);
+
+        // Poi elimina il log
+        benessereRepository.deleteById(logId);
+    }
+
 
     // Ritorna tutto lo storico del benessere di un utente
     public List<LogBenessere> getStoricoBenessere(Long utenteId) {

@@ -7,4 +7,5 @@ import java.util.List;
 public interface CommentoBenessereRepository extends JpaRepository<CommentoBenessere, Long> {
     List<CommentoBenessere> findByLogBenessereId(Long logBenessereId);
     List<CommentoBenessere> findByPsicologoId(Long psicologoId);
+    void  deleteByLogBenessereId(Long logBenessereId);
 }

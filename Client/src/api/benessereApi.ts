@@ -12,6 +12,13 @@ export const salvaLogBenessere = (log: Partial<LogBenessere>) =>
         body: JSON.stringify(log),
     });
 
+// DELETE /api/benessere/log/{logId}
+export const eliminaLog = (logId: number) =>
+    apiFetch<void>(`/api/benessere/log/${logId}`, {
+        method: 'DELETE',
+    });
+
+
 // GET /api/benessere/commenti/{logId}
 export const getCommentiLogBenessere = (logId: number) =>
     apiFetch<CommentoBenessere[]>(`/api/benessere/commenti/${logId}`);

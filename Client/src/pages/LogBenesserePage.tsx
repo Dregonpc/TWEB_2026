@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
 import { useAuth } from '../context/AuthContext';
-import { getStoricoBenessere, salvaLogBenessere, getCommentiLogBenessere } from '../api/benessereApi';
+import { getStoricoBenessere, salvaLogBenessere, getCommentiLogBenessere, eliminaLog } from '../api/benessereApi';
 import type { LogBenessere, CommentoBenessere } from '../types';
 import CommentoBenessereComponent from '../components/CommentoBenessereComponent';
-import { Heart, Plus, X, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Heart, Plus, X, MessageCircle, ChevronDown, ChevronUp, Trash2, AlertTriangle } from 'lucide-react';
 
 export default function LogBenesserePage() {
     const { utente } = useAuth();
@@ -24,6 +24,11 @@ export default function LogBenesserePage() {
     const [commentiMap, setCommentiMap] = useState<Record<number, CommentoBenessere[]>>({});
     const [loadingCommentiMap, setLoadingCommentiMap] = useState<Record<number, boolean>>({});
     const [commentiAperti, setCommentiAperti] = useState<number | null>(null);
+
+    // Eliminazione
+    const [confermaEliminaId, setConfermaEliminaId] = useState<number | null>(null);
+    const [eliminandoId, setEliminandoId] = useState<number | null>(null);
+    const [erroreElimina, setErroreElimina] = useState<string | null>(null);
 
     useEffect(() => {
         caricaStorico();
@@ -89,9 +94,24 @@ export default function LogBenesserePage() {
         }
     };
 
+    const handleConfermaElimina = async (logId: number) => {
+        setErroreElimina(null);
+        setEliminandoId(logId);
+        try {
+            await eliminaLog(logId);
+            setStorico(prev => prev.filter(l => l.id !== logId));
+            setConfermaEliminaId(null);
+            setCommentiMap(prev => { const m = { ...prev }; delete m[logId]; return m; });
+        } catch {
+            setErroreElimina("Errore durante l'eliminazione. Riprova.");
+        } finally {
+            setEliminandoId(null);
+        }
+    };
+
     const SliderValore = ({
-                              id, label, value, onChange, colore
-                          }: {
+        id, label, value, onChange, colore
+    }: {
         id: string;
         label: string;
         value: number;
@@ -112,7 +132,7 @@ export default function LogBenesserePage() {
                 max={10}
                 value={value}
                 onChange={(e) => onChange(Number(e.target.value))}
-                className="w-full accent-green-700"
+                className="w-full accent-purple-600"
             />
             <div className="flex justify-between text-xs text-gray-300">
                 <span>1</span>
@@ -239,14 +259,63 @@ export default function LogBenesserePage() {
                                     className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
                                 >
                                     <div className="px-5 py-4 flex flex-col gap-2">
-                                        <span className="text-sm font-semibold text-gray-700">
-                                            {new Date(log.data).toLocaleDateString('it-IT', {
-                                                weekday: 'long',
-                                                day: 'numeric',
-                                                month: 'long',
-                                                year: 'numeric',
-                                            })}
-                                        </span>
+
+                                        {/* Riga superiore: data + bottone elimina */}
+                                        <div className="flex items-start justify-between gap-3">
+                                            <span className="text-sm font-semibold text-gray-700">
+                                                {new Date(log.data).toLocaleDateString('it-IT', {
+                                                    weekday: 'long',
+                                                    day: 'numeric',
+                                                    month: 'long',
+                                                    year: 'numeric',
+                                                })}
+                                            </span>
+
+                                            {confermaEliminaId === log.id ? (
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-xs text-red-600 flex items-center gap-1">
+                                                        <AlertTriangle className="w-3 h-3" />
+                                                        Sicuro?
+                                                    </span>
+                                                    <button
+                                                        onClick={() => handleConfermaElimina(log.id)}
+                                                        disabled={eliminandoId === log.id}
+                                                        className="text-xs font-semibold text-white bg-red-500
+                                                                   hover:bg-red-600 disabled:opacity-50
+                                                                   px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                                                    >
+                                                        {eliminandoId === log.id ? 'Eliminazione...' : 'Elimina'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setConfermaEliminaId(null);
+                                                            setErroreElimina(null);
+                                                        }}
+                                                        className="text-xs text-gray-400 hover:text-gray-600
+                                                                   transition-colors cursor-pointer"
+                                                    >
+                                                        Annulla
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => {
+                                                        setConfermaEliminaId(log.id);
+                                                        setErroreElimina(null);
+                                                    }}
+                                                    className="flex items-center gap-1 text-xs text-gray-300
+                                                               hover:text-red-400 transition-colors cursor-pointer shrink-0"
+                                                    title="Elimina log"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Errore eliminazione */}
+                                        {erroreElimina && confermaEliminaId === log.id && (
+                                            <p className="text-xs text-red-500">{erroreElimina}</p>
+                                        )}
 
                                         <div className="flex gap-4 text-sm text-gray-600">
                                             {log.livelloUmore !== null && <span>😊 {log.livelloUmore}/10</span>}
