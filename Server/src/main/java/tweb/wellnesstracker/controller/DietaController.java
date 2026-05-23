@@ -61,4 +61,23 @@ public class DietaController {
         dieta.setCoach(coachLoggato);
         return ResponseEntity.ok(dietaService.creaDieta(dieta));
     }
+
+    // DELETE /api/dieta/eliminaDieta/{dietaId} — elimina una dieta
+    @DeleteMapping("/eliminaDieta/{dietaId}")
+    public ResponseEntity<?> eliminaDieta(@PathVariable Long dietaId, HttpServletRequest request) {
+        Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (utenteLoggato == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        try {
+            dietaService.eliminaDieta(dietaId, utenteLoggato.getId());
+            return ResponseEntity.noContent().build(); // 204
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"errore\": \"Dieta non trovata\"}");
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Non puoi eliminare questa dieta\"}");
+        }
+    }
+
 }

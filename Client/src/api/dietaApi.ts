@@ -16,3 +16,9 @@ export const creaDieta = (dieta: Partial<Dieta>) =>
         method: 'POST',
         body: JSON.stringify(dieta),
     });
+
+// DELETE /api/dieta/eliminaDieta/{dietaId}
+export const eliminaDieta = (dietaId: number) =>
+    apiFetch<void>(`/api/dieta/eliminaDieta/${dietaId}`, {
+        method: 'DELETE',
+    });

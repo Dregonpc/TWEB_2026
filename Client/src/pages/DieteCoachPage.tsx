@@ -3,7 +3,8 @@ import NavBar from '../components/NavBar';
 import DietaCard from '../components/DietaCard';
 import {
     creaDieta,
-    getDieteCoach
+    getDieteCoach,
+    eliminaDieta
 } from '../api/dietaApi';
 import { getListaUtenti } from '../api/utenteApi';
 import type { Dieta, Utente } from '../types';
@@ -91,6 +92,22 @@ export default function DieteCoachPage() {
         } finally {
 
             setSalvataggio(false);
+        }
+    };
+
+    const handleDeleteDieta = async (dietaId: number) => {
+
+        try {
+
+            await eliminaDieta(dietaId);
+
+            setDieteCreate(prev =>
+                prev.filter(d => d.id !== dietaId)
+            );
+
+        } catch {
+
+            alert('Errore durante l\'eliminazione della dieta');
         }
     };
 
@@ -294,6 +311,7 @@ export default function DieteCoachPage() {
                                 key={d.id}
                                 dieta={d}
                                 variant="coach"
+                                onDelete={handleDeleteDieta}
                             />
                         ))}
 
