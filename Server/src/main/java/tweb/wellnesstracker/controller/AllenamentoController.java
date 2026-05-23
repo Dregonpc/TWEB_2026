@@ -195,6 +195,25 @@ public class AllenamentoController {
         return ResponseEntity.ok(allenamentoService.creaScheda(scheda));
     }
 
+    // DELETE /api/allenamento/scheda/{schedaId} — solo COACH
+    @DeleteMapping("/scheda/{schedaId}")
+    public ResponseEntity<?> eliminaScheda(@PathVariable Long schedaId, HttpServletRequest request) {
+        Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (utenteLoggato == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        try {
+            allenamentoService.eliminaScheda(schedaId, utenteLoggato.getId());
+            return ResponseEntity.noContent().build(); // 204
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"errore\": \"Scheda non trovata\"}");
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Non puoi eliminare questa scheda\"}");
+        }
+    }
+
+
     // POST /api/allenamento/nuovoCommento — solo COACH
     @PostMapping("/nuovoCommento")
     public ResponseEntity<?> aggiungiCommento(@RequestBody CommentoAllenamento commento, HttpServletRequest request) {

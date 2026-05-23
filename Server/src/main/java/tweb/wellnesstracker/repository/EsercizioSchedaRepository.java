@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface EsercizioSchedaRepository extends JpaRepository<EsercizioScheda, Long> {
     List<EsercizioScheda> findBySchedaAllenamentoId(Long schedaId);
+    void deleteBySchedaAllenamentoId(Long schedaId);
 }

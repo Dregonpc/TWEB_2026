@@ -85,6 +85,24 @@ public class AllenamentoService {
         return schedaRepository.save(scheda);
     }
 
+    // Elimina una scheda
+    @Transactional
+    public void eliminaScheda(Long schedaId, Long utenteId) {
+        SchedaAllenamento scheda = schedaRepository.findById(schedaId).orElseThrow(() -> new IllegalArgumentException("Scheda non trovata: " + schedaId));
+
+        // Verifica che la scheda appartenga all'utente che ha fatto la richiesta
+        if (!scheda.getCoach().getId().equals(utenteId)) {
+            throw new SecurityException("Non autorizzato a eliminare questa scheda");
+        }
+
+        // Prima elimina gli esercizi collegati (evita violazioni FK)
+        esercizioSchedaRepository.deleteBySchedaAllenamentoId(schedaId);
+
+        // Poi elimina il log
+        schedaRepository.deleteById(schedaId);
+    }
+
+
     // Ritorna tutte le schede di un utente
     public List<SchedaAllenamento> getSchedeUtente(Long utenteId) {
         return schedaRepository.findByUtenteId(utenteId);

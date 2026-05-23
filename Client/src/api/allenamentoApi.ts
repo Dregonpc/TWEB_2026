@@ -68,6 +68,12 @@ export const creaScheda = (scheda: Partial<SchedaAllenamento>) =>
         body: JSON.stringify(scheda),
     });
 
+// DELETE /api/allenamento/scheda/{schedaId}
+export const eliminaScheda = (schedaId: number) =>
+    apiFetch<void>(`/api/allenamento/scheda/${schedaId}`, {
+        method: 'DELETE',
+    });
+
 // GET /api/allenamento/storicoCoach?utenteId=X
 export const getStoricoCoachUtente = (utenteId: number) =>
     apiFetch(`/api/allenamento/storicoCoach?utenteId=${utenteId}`);
