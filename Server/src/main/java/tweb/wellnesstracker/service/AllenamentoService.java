@@ -44,6 +44,24 @@ public class AllenamentoService {
         return esercizioRepository.save(esercizio);
     }
 
+    // Elimina un log allenamento (prima rimuove gli esercizi svolti, poi il log)
+    @Transactional
+    public void eliminaLog(Long logId, Long utenteId) {
+        LogAllenamento log = logRepository.findById(logId).orElseThrow(() -> new IllegalArgumentException("Log non trovato: " + logId));
+
+        // Verifica che il log appartenga all'utente che ha fatto la richiesta
+        if (!log.getUtente().getId().equals(utenteId)) {
+            throw new SecurityException("Non autorizzato a eliminare questo log");
+        }
+
+        // Prima elimina gli esercizi svolti collegati e commenti (evita violazioni FK)
+        commentoRepository.deleteByLogAllenamentoId(logId);
+        esercizioRepository.deleteByLogAllenamentoId(logId);
+
+        // Poi elimina il log
+        logRepository.deleteById(logId);
+    }
+
     // Ritorna tutti gli allenamenti di un utente
     public List<LogAllenamento> getStoricoUtente(Long utenteId) {
         return logRepository.findByUtenteIdOrderByDataDesc(utenteId);

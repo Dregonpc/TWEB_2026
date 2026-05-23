@@ -6,7 +6,8 @@ import {
     salvaLog,
     getCommentiLog,
     getEserciziLog,
-    aggiungiEsercizioSvolto
+    aggiungiEsercizioSvolto,
+    eliminaLog,
 } from '../api/allenamentoApi';
 import type {
     LogAllenamento,
@@ -22,7 +23,8 @@ import {
     MessageCircle,
     ChevronDown,
     ChevronUp,
-    ClipboardList
+    ClipboardList,
+    AlertTriangle,
 } from 'lucide-react';
 
 interface EsercizioForm {
@@ -46,11 +48,11 @@ const esercizioVuoto = (id: number): EsercizioForm => ({
 });
 
 function ExerciseCard({
-                          esercizio,
-                          index,
-                          onChange,
-                          onRemove
-                      }: {
+    esercizio,
+    index,
+    onChange,
+    onRemove
+}: {
     esercizio: EsercizioForm;
     index: number;
     onChange: (id: number, field: keyof EsercizioForm, value: string) => void;
@@ -143,6 +145,11 @@ export default function LogAllenamentoPage() {
     const [eserciziMap, setEserciziMap] = useState<Record<number, EsercizioSvolto[]>>({});
     const [loadingEserciziMap, setLoadingEserciziMap] = useState<Record<number, boolean>>({});
     const [eserciziAperti, setEserciziAperti] = useState<number | null>(null);
+
+    // Eliminazione: quale log sta aspettando conferma, quale è in corso
+    const [confermaEliminaId, setConfermaEliminaId] = useState<number | null>(null);
+    const [eliminandoId, setEliminandoId] = useState<number | null>(null);
+    const [erroreElimina, setErroreElimina] = useState<string | null>(null);
 
     useEffect(() => {
         caricaStorico();
@@ -249,6 +256,28 @@ export default function LogAllenamentoPage() {
         }
     };
 
+    // ── Eliminazione ──────────────────────────────────────────────────────────
+
+    const handleConfermaElimina = async (logId: number) => {
+        setErroreElimina(null);
+        setEliminandoId(logId);
+        try {
+            await eliminaLog(logId);
+            // Rimuovi dallo stato locale senza ricaricare tutto
+            setStorico(prev => prev.filter(l => l.id !== logId));
+            setConfermaEliminaId(null);
+            // Pulizia mappe collegate
+            setEserciziMap(prev => { const m = { ...prev }; delete m[logId]; return m; });
+            setCommentiMap(prev => { const m = { ...prev }; delete m[logId]; return m; });
+        } catch {
+            setErroreElimina('Errore durante l\'eliminazione. Riprova.');
+        } finally {
+            setEliminandoId(null);
+        }
+    };
+
+    // ── Render ────────────────────────────────────────────────────────────────
+
     return (
         <div className="min-h-screen bg-gray-50">
             <NavBar />
@@ -262,7 +291,7 @@ export default function LogAllenamentoPage() {
 
                     <button
                         onClick={() => setMostraModal(true)}
-                        className="bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold shadow-sm flex items-center gap-2"
+                        className="bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold shadow-sm flex items-center gap-2 cursor-pointer hover:bg-emerald-800 transition-colors"
                     >
                         <Plus size={18} />
                         Nuovo allenamento
@@ -285,18 +314,69 @@ export default function LogAllenamentoPage() {
                                     className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
                                 >
                                     <div className="px-5 py-4 flex flex-col gap-3">
-                                        <span className="text-sm font-bold text-slate-700">
-                                            {new Date(log.data).toLocaleDateString('it-IT', {
-                                                weekday: 'long',
-                                                day: 'numeric',
-                                                month: 'long'
-                                            })}
-                                        </span>
+
+                                        {/* Riga superiore: data + bottone elimina */}
+                                        <div className="flex items-start justify-between gap-3">
+                                            <span className="text-sm font-bold text-slate-700">
+                                                {new Date(log.data).toLocaleDateString('it-IT', {
+                                                    weekday: 'long',
+                                                    day: 'numeric',
+                                                    month: 'long'
+                                                })}
+                                            </span>
+
+                                            {/* Bottone elimina / conferma inline */}
+                                            {confermaEliminaId === log.id ? (
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-xs text-red-600 flex items-center gap-1">
+                                                        <AlertTriangle className="w-3 h-3" />
+                                                        Sicuro?
+                                                    </span>
+                                                    <button
+                                                        onClick={() => handleConfermaElimina(log.id)}
+                                                        disabled={eliminandoId === log.id}
+                                                        className="text-xs font-semibold text-white bg-red-500
+                                                                   hover:bg-red-600 disabled:opacity-50
+                                                                   px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                                                    >
+                                                        {eliminandoId === log.id ? 'Eliminazione...' : 'Elimina'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setConfermaEliminaId(null);
+                                                            setErroreElimina(null);
+                                                        }}
+                                                        className="text-xs text-slate-400 hover:text-slate-600
+                                                                   transition-colors cursor-pointer"
+                                                    >
+                                                        Annulla
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => {
+                                                        setConfermaEliminaId(log.id);
+                                                        setErroreElimina(null);
+                                                    }}
+                                                    className="flex items-center gap-1 text-xs text-slate-300
+                                                               hover:text-red-400 transition-colors cursor-pointer shrink-0"
+                                                    title="Elimina allenamento"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Errore eliminazione */}
+                                        {erroreElimina && confermaEliminaId === log.id && (
+                                            <p className="text-xs text-red-500">{erroreElimina}</p>
+                                        )}
 
                                         <span className="text-sm text-slate-500">
                                             {log.note || 'Nessuna nota'}
                                         </span>
 
+                                        {/* Azioni espandi */}
                                         <div className="flex flex-wrap gap-3">
                                             <button
                                                 onClick={() => toggleEsercizi(log.id)}
@@ -398,7 +478,11 @@ export default function LogAllenamentoPage() {
                                     <Trophy className="text-emerald-600" />
                                     Registra Sessione
                                 </h2>
-                                <button type="button" onClick={() => setMostraModal(false)}>
+                                <button
+                                    type="button"
+                                    onClick={() => { setMostraModal(false); resetForm(); }}
+                                    className="cursor-pointer text-slate-400 hover:text-slate-600 transition-colors"
+                                >
                                     <X />
                                 </button>
                             </div>
@@ -429,7 +513,7 @@ export default function LogAllenamentoPage() {
                                             setEsercizi([...esercizi, esercizioVuoto(nextId)]);
                                             setNextId(nextId + 1);
                                         }}
-                                        className="text-emerald-700 text-sm font-bold"
+                                        className="text-emerald-700 text-sm font-bold cursor-pointer"
                                     >
                                         + Aggiungi
                                     </button>
@@ -461,7 +545,7 @@ export default function LogAllenamentoPage() {
                             <button
                                 type="submit"
                                 disabled={salvataggio}
-                                className="bg-emerald-700 text-white py-3 rounded-xl font-bold shadow-lg disabled:opacity-50"
+                                className="bg-emerald-700 text-white py-3 rounded-xl font-bold shadow-lg disabled:opacity-50 cursor-pointer hover:bg-emerald-800 transition-colors"
                             >
                                 {salvataggio ? 'Salvataggio...' : 'Salva Allenamento'}
                             </button>

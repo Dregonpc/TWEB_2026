@@ -44,6 +44,24 @@ public class AllenamentoController {
         return ResponseEntity.ok(allenamentoService.salvaAllenamento(log, List.of()));
     }
 
+    // DELETE /api/allenamento/log/{logId} — elimina un log dell'utente loggato
+    @DeleteMapping("/log/{logId}")
+    public ResponseEntity<?> eliminaLog(@PathVariable Long logId, HttpServletRequest request) {
+        Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (utenteLoggato == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        try {
+            allenamentoService.eliminaLog(logId, utenteLoggato.getId());
+            return ResponseEntity.noContent().build(); // 204
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"errore\": \"Log non trovato\"}");
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Non puoi eliminare questo log\"}");
+        }
+    }
+
     // POST /api/allenamento/nuovoEsercizioSvolto
     @PostMapping("/nuovoEsercizioSvolto")
     public ResponseEntity<EsercizioSvolto> creaEsercizioSvolto(@RequestBody EsercizioSvolto esercizio, HttpServletRequest request) {

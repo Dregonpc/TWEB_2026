@@ -7,4 +7,5 @@ import java.util.List;
 public interface CommentoAllenamentoRepository extends JpaRepository<CommentoAllenamento, Long> {
     List<CommentoAllenamento> findByLogAllenamentoId(Long logAllenamentoId);
     List<CommentoAllenamento> findByCoachId(Long coachId);
+    void deleteByLogAllenamentoId(Long logAllenamentoId);
 }

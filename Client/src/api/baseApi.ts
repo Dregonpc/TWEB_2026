@@ -13,5 +13,9 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     if (!res.ok)
         throw new Error(`HTTP ${res.status}`);
 
+    // 204 No Content — nessun corpo da parsare
+    if (res.status === 204)
+        return undefined as T;
+
     return res.json();
 }

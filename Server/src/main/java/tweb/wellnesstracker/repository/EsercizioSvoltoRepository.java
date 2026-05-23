@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface EsercizioSvoltoRepository extends JpaRepository<EsercizioSvolto, Long> {
     List<EsercizioSvolto> findByLogAllenamentoId(Long logAllenamentoId);
+    void deleteByLogAllenamentoId(Long logAllenamentoId);
 }

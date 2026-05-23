@@ -20,6 +20,12 @@ export const salvaLog = (log: Partial<LogAllenamento>) =>
         body: JSON.stringify(log),
     });
 
+// DELETE /api/allenamento/log/{logId}
+export const eliminaLog = (logId: number) =>
+    apiFetch<void>(`/api/allenamento/log/${logId}`, {
+        method: 'DELETE',
+    });
+
 // POST /api/allenamento/nuovoEsercizioSvolto
 export const aggiungiEsercizioSvolto = (esercizio: Partial<EsercizioSvolto>) =>
     apiFetch<EsercizioSvolto>('/api/allenamento/nuovoEsercizioSvolto', {
