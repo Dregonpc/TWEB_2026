@@ -50,6 +50,20 @@ public class BenessereService {
         return commentoRepository.save(commento);
     }
 
+    // Elimina un commento
+    @Transactional
+    public void eliminaCommento(Long commentoId, Long utenteId) {
+        CommentoBenessere commento = commentoRepository.findById(commentoId).orElseThrow(() -> new IllegalArgumentException("Commento non trovato: " + commentoId));
+
+        // Verifica che il commento appartenga all'utente che ha fatto la richiesta
+        if (!commento.getPsicologo().getId().equals(utenteId)) {
+            throw new SecurityException("Non autorizzato a eliminare questo commento");
+        }
+
+        // Elimina il commento
+        commentoRepository.deleteById(commentoId);
+    }
+
     // Ritorna tutti i commenti di un determinato log
     public List<CommentoBenessere> getCommentiLog(Long logId) {
         return commentoRepository.findByLogBenessereId(logId);

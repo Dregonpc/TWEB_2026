@@ -29,3 +29,9 @@ export const aggiungiCommentoBenessere = (commento: Partial<CommentoBenessere>) 
         method: 'POST',
         body: JSON.stringify(commento),
     });
+
+// /api/benessere/eliminaCommento/{commentoId}
+export const eliminaCommento = (commentoId: number) =>
+    apiFetch<void>(`/api/benessere/eliminaCommento/${commentoId}`, {
+        method: 'DELETE',
+    });

@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import NavBar from '../components/NavBar';
-import { getStoricoBenessere, getCommentiLogBenessere, aggiungiCommentoBenessere } from '../api/benessereApi';
+import {
+    getStoricoBenessere,
+    getCommentiLogBenessere,
+    aggiungiCommentoBenessere,
+    eliminaCommento,
+} from '../api/benessereApi';
 import type { LogBenessere, CommentoBenessere, Utente } from '../types';
 import CommentoBenessereComponent from '../components/CommentoBenessereComponent';
 import { ArrowLeft, Heart, MessageCircle, ChevronDown, ChevronUp, Send } from 'lucide-react';
@@ -90,6 +95,15 @@ export default function MonitoraUtentePsicologoPage() {
         }
     };
 
+    // Elimina un commento e aggiorna la mappa locale
+    const handleEliminaCommento = async (logId: number, commentoId: number) => {
+        await eliminaCommento(commentoId);
+        setCommentiMap(prev => ({
+            ...prev,
+            [logId]: (prev[logId] ?? []).filter(c => c.id !== commentoId),
+        }));
+    };
+
     if (!utente) {
         return (
             <div className="min-h-screen bg-gray-50">
@@ -134,9 +148,7 @@ export default function MonitoraUtentePsicologoPage() {
                 <section className="flex flex-col gap-3">
                     <div className="flex items-center gap-2">
                         <Heart className="w-5 h-5 text-purple-600" />
-                        <h2 className="text-lg font-semibold text-gray-700">
-                            Storico benessere
-                        </h2>
+                        <h2 className="text-lg font-semibold text-gray-700">Storico benessere</h2>
                     </div>
 
                     {loading ? (
@@ -208,6 +220,7 @@ export default function MonitoraUtentePsicologoPage() {
                                             <CommentoBenessereComponent
                                                 commenti={commentiMap[log.id] ?? []}
                                                 loading={loadingCommentiMap[log.id] ?? false}
+                                                onElimina={(commentoId) => handleEliminaCommento(log.id, commentoId)}
                                             />
 
                                             {formCommentoAperto === log.id && (
