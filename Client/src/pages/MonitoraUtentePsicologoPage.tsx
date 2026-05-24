@@ -176,9 +176,9 @@ export default function MonitoraUtentePsicologoPage() {
                                         </span>
 
                                         <div className="flex gap-4 text-sm text-gray-600">
-                                            {log.livelloUmore !== null && <span>😊 {log.livelloUmore}/10</span>}
-                                            {log.livelloSonno !== null && <span>😴 {log.livelloSonno}/10</span>}
-                                            {log.livelloStress !== null && <span>😰 {log.livelloStress}/10</span>}
+                                            {log.livelloUmore  != null && <span>😊 Umore: {log.livelloUmore}/10</span>}
+                                            {log.livelloSonno  != null && <span>😴 Qualità del sonno: {log.livelloSonno}/10</span>}
+                                            {log.livelloStress != null && <span>😰 Livello di stress: {log.livelloStress}/10</span>}
                                         </div>
 
                                         {log.noteDiario && (
