@@ -128,6 +128,21 @@ public class AllenamentoService {
         return commentoRepository.save(commento);
     }
 
+    // Elimina un commento
+    @Transactional
+    public void eliminaCommento(Long commentoId, Long utenteId) {
+        CommentoAllenamento commento = commentoRepository.findById(commentoId).orElseThrow(() -> new IllegalArgumentException("Commento non trovato: " + commentoId));
+
+        // Verifica che il commento appartenga all'utente che ha fatto la richiesta
+        if (!commento.getCoach().getId().equals(utenteId)) {
+            throw new SecurityException("Non autorizzato a eliminare questo commento");
+        }
+
+        // Elimina il commento
+        commentoRepository.deleteById(commentoId);
+    }
+
+
     // Ritorna tutti i commenti di un allenamento
     public List<CommentoAllenamento> getCommentiLog(Long logId) {
         return commentoRepository.findByLogAllenamentoId(logId);

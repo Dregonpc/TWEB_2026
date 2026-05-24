@@ -7,6 +7,7 @@ import {
     getStoricoCoachUtente,
     getCommentiLog,
     aggiungiCommento,
+    eliminaCommento,
     getEserciziLog,
     getSchedeCoach,
     getEserciziScheda,
@@ -101,7 +102,6 @@ export default function MonitoraUtenteCoachPage() {
                 scheda?.atleta?.id ??
                 scheda?.utenteId ??
                 null;
-
             return idAssociato === utenteIdNum;
         });
     }, [schedeCoach, utenteIdNum]);
@@ -113,7 +113,6 @@ export default function MonitoraUtenteCoachPage() {
                 dieta?.atleta?.id ??
                 dieta?.utenteId ??
                 null;
-
             return idAssociato === utenteIdNum;
         });
     }, [dieteCoach, utenteIdNum]);
@@ -128,7 +127,6 @@ export default function MonitoraUtenteCoachPage() {
 
         if (!commentiMap[logId]) {
             setLoadingCommentiMap(prev => ({ ...prev, [logId]: true }));
-
             try {
                 const commenti = await getCommentiLog(logId);
                 setCommentiMap(prev => ({ ...prev, [logId]: commenti as CommentoAllenamento[] }));
@@ -150,7 +148,6 @@ export default function MonitoraUtenteCoachPage() {
 
         if (!eserciziLogMap[logId]) {
             setLoadingEserciziLogMap(prev => ({ ...prev, [logId]: true }));
-
             try {
                 const esercizi = await getEserciziLog(logId);
                 setEserciziLogMap(prev => ({ ...prev, [logId]: esercizi as EsercizioSvolto[] }));
@@ -172,7 +169,6 @@ export default function MonitoraUtenteCoachPage() {
 
         if (!eserciziSchedaMap[schedaId]) {
             setLoadingEserciziSchedaMap(prev => ({ ...prev, [schedaId]: true }));
-
             try {
                 const esercizi = await getEserciziScheda(schedaId);
                 setEserciziSchedaMap(prev => ({ ...prev, [schedaId]: esercizi as EsercizioScheda[] }));
@@ -186,7 +182,6 @@ export default function MonitoraUtenteCoachPage() {
 
     const handleInviaCommento = async (e: React.FormEvent, logId: number) => {
         e.preventDefault();
-
         if (!testoCommento.trim()) return;
 
         setErroreCommento(null);
@@ -219,6 +214,15 @@ export default function MonitoraUtenteCoachPage() {
         }
     };
 
+    // Elimina un commento e aggiorna la mappa locale
+    const handleEliminaCommento = async (logId: number, commentoId: number) => {
+        await eliminaCommento(commentoId);
+        setCommentiMap(prev => ({
+            ...prev,
+            [logId]: (prev[logId] ?? []).filter(c => c.id !== commentoId),
+        }));
+    };
+
     const renderLogCard = (log: LogAllenamento, sezione: 'ultimi7' | 'storico') => (
         <li
             key={`${sezione}-${log.id}`}
@@ -247,11 +251,10 @@ export default function MonitoraUtenteCoachPage() {
                     >
                         <ClipboardList className="w-3.5 h-3.5" />
                         Esercizi svolti
-                        {eserciziLogAperti === log.id ? (
-                            <ChevronUp className="w-3 h-3" />
-                        ) : (
-                            <ChevronDown className="w-3 h-3" />
-                        )}
+                        {eserciziLogAperti === log.id
+                            ? <ChevronUp className="w-3 h-3" />
+                            : <ChevronDown className="w-3 h-3" />
+                        }
                     </button>
 
                     <button
@@ -260,11 +263,10 @@ export default function MonitoraUtenteCoachPage() {
                     >
                         <MessageCircle className="w-3.5 h-3.5" />
                         Commenti
-                        {commentiAperti === log.id ? (
-                            <ChevronUp className="w-3 h-3" />
-                        ) : (
-                            <ChevronDown className="w-3 h-3" />
-                        )}
+                        {commentiAperti === log.id
+                            ? <ChevronUp className="w-3 h-3" />
+                            : <ChevronDown className="w-3 h-3" />
+                        }
                     </button>
 
                     <button
@@ -272,10 +274,7 @@ export default function MonitoraUtenteCoachPage() {
                             setFormCommentoAperto(prev => (prev === log.id ? null : log.id));
                             setTestoCommento('');
                             setErroreCommento(null);
-
-                            if (commentiAperti !== log.id) {
-                                toggleCommenti(log.id);
-                            }
+                            if (commentiAperti !== log.id) toggleCommenti(log.id);
                         }}
                         className="flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-700 transition-colors cursor-pointer"
                     >
@@ -302,14 +301,12 @@ export default function MonitoraUtenteCoachPage() {
                                         <span className="text-sm font-semibold text-slate-700">
                                             {esercizio.nomeEsercizio}
                                         </span>
-
                                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
                                             {esercizio.serie != null && <span>Serie: {esercizio.serie}</span>}
                                             {esercizio.ripetizioni != null && <span>Ripetizioni: {esercizio.ripetizioni}</span>}
                                             {esercizio.peso != null && <span>Peso: {esercizio.peso} kg</span>}
                                             {esercizio.durata != null && <span>Durata: {esercizio.durata} min</span>}
                                         </div>
-
                                         {(esercizio.commento ?? esercizio.note) && (
                                             <p className="text-xs text-slate-400 italic">
                                                 {esercizio.commento ?? esercizio.note}
@@ -328,6 +325,7 @@ export default function MonitoraUtenteCoachPage() {
                     <CommentoAllenamentoComponent
                         commenti={commentiMap[log.id] ?? []}
                         loading={loadingCommentiMap[log.id] ?? false}
+                        onElimina={(commentoId) => handleEliminaCommento(log.id, commentoId)}
                     />
 
                     {formCommentoAperto === log.id && (
@@ -342,17 +340,19 @@ export default function MonitoraUtenteCoachPage() {
                                     placeholder="Scrivi un commento per questo allenamento..."
                                     rows={2}
                                     required
-                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-colors bg-white"
+                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none
+                                               focus:outline-none focus:border-green-700 focus:ring-1
+                                               focus:ring-green-700 transition-colors bg-white"
                                 />
-
                                 {erroreCommento && (
                                     <p className="text-xs text-red-600">{erroreCommento}</p>
                                 )}
-
                                 <button
                                     type="submit"
                                     disabled={salvataggioCommento}
-                                    className="self-end flex items-center gap-2 text-sm bg-green-700 hover:bg-green-800 disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-lg transition-colors cursor-pointer"
+                                    className="self-end flex items-center gap-2 text-sm bg-green-700
+                                               hover:bg-green-800 disabled:opacity-50 text-white font-semibold
+                                               px-4 py-2 rounded-lg transition-colors cursor-pointer"
                                 >
                                     <Send className="w-3.5 h-3.5" />
                                     {salvataggioCommento ? 'Invio...' : 'Invia'}
@@ -451,9 +451,7 @@ export default function MonitoraUtenteCoachPage() {
                 <section className="flex flex-col gap-3">
                     <div className="flex items-center gap-2">
                         <ClipboardList className="w-5 h-5 text-blue-700" />
-                        <h2 className="text-lg font-semibold text-gray-700">
-                            Schede assegnate
-                        </h2>
+                        <h2 className="text-lg font-semibold text-gray-700">Schede assegnate</h2>
                     </div>
 
                     {loadingSchede ? (
@@ -473,30 +471,26 @@ export default function MonitoraUtenteCoachPage() {
                                         <span className="text-sm font-semibold text-gray-700">
                                             {scheda.nome ?? scheda.titolo ?? `Scheda #${scheda.id}`}
                                         </span>
-
                                         {(scheda.descrizione ?? scheda.note) && (
                                             <p className="text-sm text-gray-500">
                                                 {scheda.descrizione ?? scheda.note}
                                             </p>
                                         )}
-
                                         {scheda.dataCreazione && (
                                             <p className="text-xs text-gray-400">
                                                 Creata il {new Date(scheda.dataCreazione).toLocaleDateString('it-IT')}
                                             </p>
                                         )}
-
                                         <button
                                             onClick={() => toggleEserciziScheda(scheda.id)}
                                             className="mt-1 flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors w-fit cursor-pointer"
                                         >
                                             <ClipboardList className="w-3.5 h-3.5" />
                                             Esercizi della scheda
-                                            {schedaAperta === scheda.id ? (
-                                                <ChevronUp className="w-3 h-3" />
-                                            ) : (
-                                                <ChevronDown className="w-3 h-3" />
-                                            )}
+                                            {schedaAperta === scheda.id
+                                                ? <ChevronUp className="w-3 h-3" />
+                                                : <ChevronDown className="w-3 h-3" />
+                                            }
                                         </button>
                                     </div>
 
@@ -517,7 +511,6 @@ export default function MonitoraUtenteCoachPage() {
                                                                 <span className="text-sm font-semibold text-slate-700">
                                                                     {es.nomeEsercizio}
                                                                 </span>
-
                                                                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
                                                                     {es.serie != null && <span>Serie: {es.serie}</span>}
                                                                     {es.ripetizioni != null && <span>Ripetizioni: {es.ripetizioni}</span>}
@@ -525,7 +518,6 @@ export default function MonitoraUtenteCoachPage() {
                                                                     {es.peso != null && <span>Peso: {es.peso} kg</span>}
                                                                     {es.durata != null && <span>Durata: {es.durata} min</span>}
                                                                 </div>
-
                                                                 {(es.note ?? es.commento) && (
                                                                     <p className="text-xs text-slate-400 italic">
                                                                         {es.note ?? es.commento}
@@ -547,9 +539,7 @@ export default function MonitoraUtenteCoachPage() {
                 <section className="flex flex-col gap-3">
                     <div className="flex items-center gap-2">
                         <Apple className="w-5 h-5 text-orange-600" />
-                        <h2 className="text-lg font-semibold text-gray-700">
-                            Diete assegnate
-                        </h2>
+                        <h2 className="text-lg font-semibold text-gray-700">Diete assegnate</h2>
                     </div>
 
                     {loadingDiete ? (
@@ -568,13 +558,11 @@ export default function MonitoraUtenteCoachPage() {
                                     <span className="text-sm font-semibold text-gray-700">
                                         {dieta.nome ?? dieta.titolo ?? `Dieta #${dieta.id}`}
                                     </span>
-
                                     {(dieta.descrizione ?? dieta.note) && (
                                         <p className="text-sm text-gray-500">
                                             {dieta.descrizione ?? dieta.note}
                                         </p>
                                     )}
-
                                     {dieta.dataCreazione && (
                                         <p className="text-xs text-gray-400">
                                             Creata il {new Date(dieta.dataCreazione).toLocaleDateString('it-IT')}

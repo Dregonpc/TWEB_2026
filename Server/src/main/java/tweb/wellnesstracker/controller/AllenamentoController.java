@@ -230,4 +230,23 @@ public class AllenamentoController {
         commento.setCoach(coachLoggato);
         return ResponseEntity.ok(allenamentoService.aggiungiCommento(commento));
     }
+
+    // DELETE /api/allenamento/eliminaCommento/{commentoId} — elimina un commento
+    @DeleteMapping("eliminaCommento/{commentoId}")
+    public ResponseEntity<?> eliminaCommento(@PathVariable Long commentoId, HttpServletRequest request) {
+        Utente utenteLoggato = (Utente) request.getSession().getAttribute("utente");
+
+        if (utenteLoggato == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        try {
+            allenamentoService.eliminaCommento(commentoId, utenteLoggato.getId());
+            return ResponseEntity.noContent().build(); // 204
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"errore\": \"Commento non trovato\"}");
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Non puoi eliminare questo commento\"}");
+        }
+    }
+
 }

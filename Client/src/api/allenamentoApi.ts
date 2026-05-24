@@ -91,3 +91,9 @@ export const aggiungiCommento = (commento: Partial<CommentoAllenamento>) =>
         method: 'POST',
         body: JSON.stringify(commento),
     });
+
+// /api/allenamento/eliminaCommento/{commentoId}
+export const eliminaCommento = (commentoId: number) =>
+    apiFetch<void>(`/api/allenamento/eliminaCommento/${commentoId}`, {
+        method: 'DELETE',
+    });
