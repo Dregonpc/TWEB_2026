@@ -44,7 +44,7 @@ export default function DashboardCoach() {
     const saluto = ora < 12 ? 'Buongiorno' : ora < 18 ? 'Buon pomeriggio' : 'Buonasera';
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="bg-gray-50">
 
             <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col gap-8">
 

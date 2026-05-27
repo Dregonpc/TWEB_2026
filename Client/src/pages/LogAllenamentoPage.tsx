@@ -56,7 +56,7 @@ export default function LogAllenamentoPage() {
                 {/* Header + bottone apertura form (fratello A) */}
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <Dumbbell className="text-emerald-700" />
+                        <Dumbbell className="text-green-700" />
                         I miei allenamenti
                     </h1>
 

@@ -6,17 +6,7 @@ import {
 } from '../api/allenamentoApi';
 import type { LogAllenamento, EsercizioSvolto, CommentoAllenamento } from '../types';
 import CommentoAllenamentoComponent from './CommentoAllenamentoComponent';
-import {
-    Dumbbell,
-    ClipboardList,
-    MessageCircle,
-    ChevronDown,
-    ChevronUp,
-    Trash2,
-    AlertTriangle,
-} from 'lucide-react';
-
-// ── Props ─────────────────────────────────────────────────────────────────────
+import {Dumbbell, ClipboardList, MessageCircle, ChevronDown, ChevronUp, Trash2, AlertTriangle} from 'lucide-react';
 
 interface Props {
     /** Lista log passata dal genitore LogAllenamentoPage. */

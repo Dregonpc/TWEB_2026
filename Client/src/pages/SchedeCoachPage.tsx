@@ -9,16 +9,7 @@ import {
 } from '../api/allenamentoApi';
 import { getListaUtenti } from '../api/utenteApi';
 import type { SchedaAllenamento, Utente, EsercizioScheda } from '../types';
-import {
-    ClipboardList,
-    Plus,
-    X,
-    Trash2,
-    UserPlus,
-    ChevronDown,
-    ChevronUp,
-    AlertTriangle,
-} from 'lucide-react';
+import { ClipboardList, Plus, X, Trash2, UserPlus, ChevronDown, ChevronUp, AlertTriangle,} from 'lucide-react';
 
 interface EsercizioSchedaForm {
     id: number;
@@ -253,13 +244,13 @@ export default function SchedeCoachPage() {
             <main className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <ClipboardList className="text-emerald-700" />
+                        <ClipboardList className="text-green-700" />
                         Gestione schede
                     </h1>
 
                     <button
                         onClick={() => setMostraModal(true)}
-                        className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg
+                        className="bg-green-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg
                                    font-semibold shadow-sm flex items-center gap-2 transition-colors cursor-pointer"
                     >
                         <Plus size={18} />

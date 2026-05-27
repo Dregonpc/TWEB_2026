@@ -40,7 +40,7 @@ export default function DashboardPsicologo() {
     const saluto = ora < 12 ? 'Buongiorno' : ora < 18 ? 'Buon pomeriggio' : 'Buonasera';
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="bg-gray-50">
 
             <main className="max-w-5xl mx-auto flex flex-col gap-6">
 

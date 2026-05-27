@@ -1,13 +1,6 @@
 import { useState } from 'react';
 import type { Dieta } from '../types';
-import {
-    Salad,
-    ChevronDown,
-    ChevronUp,
-    User,
-    Trash2,
-    AlertTriangle
-} from 'lucide-react';
+import {Salad, ChevronDown, ChevronUp, User, Trash2, AlertTriangle} from 'lucide-react';
 
 type Props = {
     dieta: Dieta;

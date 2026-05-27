@@ -81,7 +81,7 @@ export default function NavBar() {
                     className="flex items-center gap-2 font-bold text-lg hover:opacity-80
                                transition-opacity shrink-0"
                 >
-                    <Leaf className="w-5 h-5 text-green-300" />
+                    <Leaf className="w-5 h-5 text-white" />
                     <span>WellnessTracker</span>
                 </Link>
 

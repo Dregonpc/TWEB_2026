@@ -23,19 +23,7 @@ import type {
     EsercizioScheda,
     Dieta,
 } from '../types';
-import {
-    ArrowLeft,
-    Dumbbell,
-    MessageCircle,
-    ChevronDown,
-    ChevronUp,
-    Send,
-    ClipboardList,
-    FileText,
-    Apple,
-    Trash2,
-    AlertTriangle,
-} from 'lucide-react';
+import {ArrowLeft, Dumbbell, MessageCircle, ChevronDown, ChevronUp, Send, ClipboardList, FileText, Apple, Trash2, AlertTriangle,} from 'lucide-react';
 
 // ── Sezione collassabile ──────────────────────────────────────────────────────
 

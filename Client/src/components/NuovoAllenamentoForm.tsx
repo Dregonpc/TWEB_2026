@@ -179,7 +179,7 @@ export default function NuovoAllenamentoForm({ onNuovoLog }: Props) {
             {/* Pulsante di apertura */}
             <button
                 onClick={() => setMostraModal(true)}
-                className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg
+                className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg
                            font-semibold shadow-sm flex items-center gap-2 transition-colors cursor-pointer"
             >
                 <Plus size={18} />
