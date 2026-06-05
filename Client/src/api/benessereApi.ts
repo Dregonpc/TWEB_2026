@@ -1,11 +1,13 @@
 import { apiFetch } from './baseApi';
 import type { LogBenessere, CommentoBenessere } from '../types';
 
+// USER + PSICOLOGO
+
 // GET /api/benessere/storico?utenteId=X
 export const getStoricoBenessere = (utenteId: number) =>
     apiFetch<LogBenessere[]>(`/api/benessere/storico?utenteId=${utenteId}`);
 
-// POST /api/benessere/log — USER
+// POST /api/benessere/log
 export const salvaLogBenessere = (log: Partial<LogBenessere>) =>
     apiFetch<LogBenessere>('/api/benessere/log', {
         method: 'POST',
@@ -18,19 +20,21 @@ export const eliminaLog = (logId: number) =>
         method: 'DELETE',
     });
 
-
 // GET /api/benessere/commenti/{logId}
 export const getCommentiLogBenessere = (logId: number) =>
     apiFetch<CommentoBenessere[]>(`/api/benessere/commenti/${logId}`);
 
-// POST /api/benessere/commento — solo PSICOLOGO
+
+// PSICOLOGO
+
+// POST /api/benessere/commento
 export const aggiungiCommentoBenessere = (commento: Partial<CommentoBenessere>) =>
     apiFetch<CommentoBenessere>('/api/benessere/commento', {
         method: 'POST',
         body: JSON.stringify(commento),
     });
 
-// /api/benessere/eliminaCommento/{commentoId}
+// DELETE /api/benessere/eliminaCommento/{commentoId}
 export const eliminaCommento = (commentoId: number) =>
     apiFetch<void>(`/api/benessere/eliminaCommento/${commentoId}`, {
         method: 'DELETE',

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getStorico } from '../../api/allenamentoApi';
+import { getStorico, getSchedeUtente } from '../../api/allenamentoApi';
 import { getStoricoBenessere } from '../../api/benessereApi';
 import { getDieteUtente } from '../../api/dietaApi';
-import { getSchedeUtente } from '../../api/allenamentoApi';
 import type {
     LogAllenamento,
     LogBenessere,

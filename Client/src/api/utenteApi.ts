@@ -1,7 +1,9 @@
 import { apiFetch } from './baseApi';
 import type { Utente } from '../types';
 
-// GET /api/utenti/listaUtenti — solo COACH e PSICOLOGO
+// COACH + PSICOLOGO
+
+// GET /api/utenti/listaUtenti
 export const getListaUtenti = () =>
     apiFetch<Utente[]>('/api/utenti/listaUtenti');
 

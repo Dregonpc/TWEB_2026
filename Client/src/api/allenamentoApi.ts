@@ -41,6 +41,7 @@ export const getEserciziLog = (logId: number) =>
 export const getSchedeUtente = () =>
     apiFetch<SchedaAllenamento[]>('/api/allenamento/schedeUtente');
 
+
 // PUBBLICI
 
 // GET /api/allenamento/eseriziScheda/{schedaId}
@@ -50,6 +51,7 @@ export const getEserciziScheda = (schedaId: number) =>
 // GET /api/allenamento/commenti/{logId}
 export const getCommentiLog = (logId: number) =>
     apiFetch<CommentoAllenamento[]>(`/api/allenamento/commenti/${logId}`);
+
 
 // COACH
 
@@ -92,7 +94,7 @@ export const aggiungiCommento = (commento: Partial<CommentoAllenamento>) =>
         body: JSON.stringify(commento),
     });
 
-// /api/allenamento/eliminaCommento/{commentoId}
+// DELETE /api/allenamento/eliminaCommento/{commentoId}
 export const eliminaCommento = (commentoId: number) =>
     apiFetch<void>(`/api/allenamento/eliminaCommento/${commentoId}`, {
         method: 'DELETE',

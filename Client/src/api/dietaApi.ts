@@ -1,16 +1,19 @@
 import { apiFetch } from './baseApi';
 import type { Dieta } from '../types';
 
-// GET /api/dieta/utente — USER
+// USER
+
+// GET /api/dieta/utente
 export const getDieteUtente = () =>
     apiFetch<Dieta[]>('/api/dieta/utente');
 
-// GET /api/dieta/coach — COACH
+// COACH
+
+// GET /api/dieta/coach
 export const getDieteCoach = () =>
     apiFetch<Dieta[]>('/api/dieta/coach');
 
-
-// POST /api/dieta/aggiungiDieta — solo COACH
+// POST /api/dieta/aggiungiDieta
 export const creaDieta = (dieta: Partial<Dieta>) =>
     apiFetch<Dieta>('/api/dieta/aggiungiDieta', {
         method: 'POST',
