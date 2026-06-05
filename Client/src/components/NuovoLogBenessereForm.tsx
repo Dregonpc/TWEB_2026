@@ -3,8 +3,7 @@ import { salvaLogBenessere } from '../api/benessereApi';
 import type { LogBenessere } from '../types';
 import { Plus, X } from 'lucide-react';
 
-// ── Sotto-componente: slider con label e valore ───────────────────────────────
-
+// Sotto-componente: slider con label e valore
 interface SliderProps {
     id: string;
     label: string;
@@ -39,7 +38,7 @@ function SliderValore({ id, label, value, onChange, colore }: SliderProps) {
     );
 }
 
-// ── Componente principale ─────────────────────────────────────────────────────
+// Componente principale
 
 interface Props {
     /** Chiamata dal genitore quando il log viene salvato con successo. */

@@ -1,3 +1,5 @@
+// noinspection LanguageDetectionInspection
+
 import { useState } from 'react';
 import {
     getCommentiLogBenessere,
@@ -35,7 +37,7 @@ export default function StoricoBenessere({ logs, onEliminaLog }: Props) {
     const [eliminandoId, setEliminandoId]             = useState<number | null>(null);
     const [erroreElimina, setErroreElimina]           = useState<string | null>(null);
 
-    // ── Handlers ──────────────────────────────────────────────────────────────
+    // Handlers
 
     const toggleCommenti = async (logId: number) => {
         if (commentiAperti === logId) { setCommentiAperti(null); return; }
@@ -69,7 +71,7 @@ export default function StoricoBenessere({ logs, onEliminaLog }: Props) {
         }
     };
 
-    // ── Render ────────────────────────────────────────────────────────────────
+    // Render
 
     if (logs.length === 0) {
         return (

@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import {
-    LogOut, Leaf, LayoutDashboard, Dumbbell, Heart,
-    ClipboardList, Salad, Users, Menu, X,
-} from 'lucide-react';
+import {LogOut, Leaf, LayoutDashboard, Dumbbell, Heart, ClipboardList, Salad, Users, Menu, X } from 'lucide-react';
 
 const ruoloBadge: Record<string, string> = {
     USER:      'bg-blue-100 text-blue-700',

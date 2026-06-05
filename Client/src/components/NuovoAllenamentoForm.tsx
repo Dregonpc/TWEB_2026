@@ -3,8 +3,7 @@ import { salvaLog, aggiungiEsercizioSvolto } from '../api/allenamentoApi';
 import type { LogAllenamento, EsercizioSvolto } from '../types';
 import { Trophy, X, Plus, Trash2 } from 'lucide-react';
 
-// ── Tipi interni ──────────────────────────────────────────────────────────────
-
+// Esercizio Svolto locale
 interface EsercizioForm {
     id: number;
     nomeEsercizio: string;
@@ -25,8 +24,7 @@ const esercizioVuoto = (id: number): EsercizioForm => ({
     commento: '',
 });
 
-// ── Sotto-componente: card singolo esercizio nel form ─────────────────────────
-
+// Sotto-componente: card singolo esercizio nel form
 interface ExerciseCardProps {
     esercizio: EsercizioForm;
     index: number;
@@ -104,7 +102,7 @@ function ExerciseCard({ esercizio, index, onChange, onRemove }: ExerciseCardProp
     );
 }
 
-// ── Componente principale ─────────────────────────────────────────────────────
+// Componente principale
 
 interface Props {
     /** Chiamata dal genitore quando un nuovo log viene salvato con successo. */

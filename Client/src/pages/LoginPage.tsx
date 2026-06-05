@@ -25,6 +25,24 @@ export default function LoginPage() {
         }
     };
 
+    // Funzione helper per tradurre l'errore tecnico in messaggio utente
+    const getMessaggioErrore = (err: string) => {
+        const errorStr = err.toLowerCase();
+
+        if (errorStr.includes('401') || errorStr.includes('403')) {
+            return "Username o password errati";
+        }
+        if (errorStr.includes('500') || errorStr.includes('502')) {
+            return "Errore interno del server. Riprova più tardi";
+        }
+        if (errorStr.includes('failed to fetch') || errorStr.includes('network error') || errorStr.includes('503')) {
+            return "Server non raggiungibile o spento";
+        }
+
+        // Se è già una stringa personalizzata o non fa match con i codici, la restituisce così com'è
+        return err;
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center px-4
                         bg-gradient-to-br from-teal-50 via-teal-100 to-green-100">
@@ -93,10 +111,10 @@ export default function LoginPage() {
                         </div>
                     </div>
 
-                    {/* Messaggio di errore */}
+                    {/* Messaggio di errore con traduzione automatica */}
                     {errore && (
                         <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg !px-4 !py-2.5">
-                            {errore}
+                            {getMessaggioErrore(errore)}
                         </div>
                     )}
 

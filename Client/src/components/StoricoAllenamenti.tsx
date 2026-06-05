@@ -42,7 +42,7 @@ export default function StoricoAllenamenti({ logs, onEliminaLog }: Props) {
     const [eliminandoId, setEliminandoId]             = useState<number | null>(null);
     const [erroreElimina, setErroreElimina]           = useState<string | null>(null);
 
-    // ── Handlers ──────────────────────────────────────────────────────────────
+    // Handlers
 
     const toggleEsercizi = async (logId: number) => {
         if (eserciziAperti === logId) { setEserciziAperti(null); return; }
@@ -94,7 +94,7 @@ export default function StoricoAllenamenti({ logs, onEliminaLog }: Props) {
         }
     };
 
-    // ── Render ────────────────────────────────────────────────────────────────
+    // Render
 
     if (logs.length === 0) {
         return (
