@@ -9,7 +9,16 @@ import {
 } from '../api/allenamentoApi';
 import { getListaUtenti } from '../api/utenteApi';
 import type { SchedaAllenamento, Utente, EsercizioScheda } from '../types';
-import { ClipboardList, Plus, X, Trash2, UserPlus, ChevronDown, ChevronUp, AlertTriangle,} from 'lucide-react';
+import {
+    ClipboardList,
+    Plus,
+    X,
+    Trash2,
+    UserPlus,
+    ChevronDown,
+    ChevronUp,
+    AlertTriangle,
+} from 'lucide-react';
 
 interface EsercizioSchedaForm {
     id: number;
@@ -28,11 +37,11 @@ const esercizioVuoto = (id: number): EsercizioSchedaForm => ({
 });
 
 function ExerciseCard({
-    esercizio,
-    index,
-    onChange,
-    onRemove
-}: {
+                          esercizio,
+                          index,
+                          onChange,
+                          onRemove,
+                      }: {
     esercizio: EsercizioSchedaForm;
     index: number;
     onChange: (id: number, field: keyof EsercizioSchedaForm, value: string) => void;
@@ -44,6 +53,7 @@ function ExerciseCard({
                 <span className="text-sm font-semibold text-slate-600">
                     Esercizio {index + 1}
                 </span>
+
                 <button
                     type="button"
                     onClick={() => onRemove(esercizio.id)}
@@ -58,6 +68,7 @@ function ExerciseCard({
                 <label className="text-xs font-medium text-slate-500">
                     Nome esercizio <span className="text-red-400">*</span>
                 </label>
+
                 <input
                     type="text"
                     value={esercizio.nomeEsercizio}
@@ -75,11 +86,16 @@ function ExerciseCard({
                 ].map(({ field, label, placeholder }) => (
                     <div key={field} className="flex flex-col gap-1">
                         <label className="text-xs text-slate-400">{label}</label>
+
                         <input
                             type="number"
                             value={esercizio[field as keyof EsercizioSchedaForm]}
                             onChange={(e) =>
-                                onChange(esercizio.id, field as keyof EsercizioSchedaForm, e.target.value)
+                                onChange(
+                                    esercizio.id,
+                                    field as keyof EsercizioSchedaForm,
+                                    e.target.value
+                                )
                             }
                             placeholder={placeholder}
                             min={0}
@@ -91,6 +107,7 @@ function ExerciseCard({
 
             <div className="flex flex-col gap-1">
                 <label className="text-xs text-slate-400">Note</label>
+
                 <input
                     type="text"
                     value={esercizio.note}
@@ -121,7 +138,6 @@ export default function SchedeCoachPage() {
     const [loadingEserciziMap, setLoadingEserciziMap] = useState<Record<number, boolean>>({});
     const [schedaAperta, setSchedaAperta] = useState<number | null>(null);
 
-    // Eliminazione scheda
     const [confermaEliminaId, setConfermaEliminaId] = useState<number | null>(null);
     const [eliminandoId, setEliminandoId] = useState<number | null>(null);
     const [erroreElimina, setErroreElimina] = useState<string | null>(null);
@@ -136,6 +152,7 @@ export default function SchedeCoachPage() {
                 getSchedeCoach(),
                 getListaUtenti(),
             ]);
+
             setSchede(listaSchede as SchedaAllenamento[]);
             setUtenti(listaUtenti as Utente[]);
         } catch (err) {
@@ -155,9 +172,13 @@ export default function SchedeCoachPage() {
 
         if (!eserciziSchedaMap[schedaId]) {
             setLoadingEserciziMap(prev => ({ ...prev, [schedaId]: true }));
+
             try {
                 const esercizi = await getEserciziScheda(schedaId);
-                setEserciziSchedaMap(prev => ({ ...prev, [schedaId]: esercizi as EsercizioScheda[] }));
+                setEserciziSchedaMap(prev => ({
+                    ...prev,
+                    [schedaId]: esercizi as EsercizioScheda[],
+                }));
             } catch (err) {
                 console.error('Errore caricamento esercizi scheda:', err);
             } finally {
@@ -186,16 +207,31 @@ export default function SchedeCoachPage() {
         setErrore(null);
 
         try {
-            const eserciziValidi = esercizi.filter(ex => ex.nomeEsercizio.trim() !== '');
+            const eserciziValidi = esercizi.filter(
+                ex => ex.nomeEsercizio.trim() !== ''
+            );
 
-            if (!utenteId) throw new Error('Seleziona un atleta');
-            if (!titolo.trim()) throw new Error('Inserisci il titolo della scheda');
-            if (eserciziValidi.length === 0) throw new Error('Inserisci almeno un esercizio');
+            if (!utenteId) {
+                throw new Error('Seleziona un atleta');
+            }
+
+            if (!titolo.trim()) {
+                throw new Error('Inserisci il titolo della scheda');
+            }
+
+            if (eserciziValidi.length === 0) {
+                throw new Error('Inserisci almeno un esercizio');
+            }
+
+            const dataCreazione = new Date().toISOString().split('T')[0];
 
             const nuovaScheda = await creaScheda({
                 titolo: titolo.trim(),
+                dataCreazione,
                 note: noteGenerali.trim() || null,
-                utente: { id: parseInt(utenteId, 10) } as Utente,
+                utente: {
+                    id: parseInt(utenteId, 10),
+                } as Utente,
             });
 
             await Promise.all(
@@ -204,17 +240,22 @@ export default function SchedeCoachPage() {
                         nomeEsercizio: ex.nomeEsercizio.trim(),
                         serie: ex.serie ? parseInt(ex.serie, 10) : null,
                         ripetizioni: ex.ripetizioni ? parseInt(ex.ripetizioni, 10) : null,
-                        note: ex.note || null,
-                        schedaAllenamento: { id: (nuovaScheda as SchedaAllenamento).id } as SchedaAllenamento,
+                        note: ex.note.trim() || null,
+                        schedaAllenamento: {
+                            id: (nuovaScheda as SchedaAllenamento).id,
+                        } as SchedaAllenamento,
                     } as any)
                 )
             );
 
             await caricaDati();
-            setMostraModal(false);
-            resetForm();
+            closeModal();
         } catch (err) {
-            setErrore(err instanceof Error ? err.message : 'Errore nel salvataggio della scheda.');
+            setErrore(
+                err instanceof Error
+                    ? err.message
+                    : 'Errore nel salvataggio della scheda.'
+            );
         } finally {
             setSalvataggio(false);
         }
@@ -223,13 +264,22 @@ export default function SchedeCoachPage() {
     const handleConfermaElimina = async (schedaId: number) => {
         setErroreElimina(null);
         setEliminandoId(schedaId);
+
         try {
             await eliminaScheda(schedaId);
+
             setSchede(prev => prev.filter(s => s.id !== schedaId));
             setConfermaEliminaId(null);
-            // Pulizia mappa esercizi della scheda eliminata
-            setEserciziSchedaMap(prev => { const m = { ...prev }; delete m[schedaId]; return m; });
-            if (schedaAperta === schedaId) setSchedaAperta(null);
+
+            setEserciziSchedaMap(prev => {
+                const nuovaMappa = { ...prev };
+                delete nuovaMappa[schedaId];
+                return nuovaMappa;
+            });
+
+            if (schedaAperta === schedaId) {
+                setSchedaAperta(null);
+            }
         } catch {
             setErroreElimina("Errore durante l'eliminazione. Riprova.");
         } finally {
@@ -250,8 +300,7 @@ export default function SchedeCoachPage() {
 
                     <button
                         onClick={() => setMostraModal(true)}
-                        className="bg-green-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg
-                                   font-semibold shadow-sm flex items-center gap-2 transition-colors cursor-pointer"
+                        className="bg-green-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg font-semibold shadow-sm flex items-center gap-2 transition-colors cursor-pointer"
                     >
                         <Plus size={18} />
                         Nuova scheda
@@ -274,8 +323,6 @@ export default function SchedeCoachPage() {
                                     className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
                                 >
                                     <div className="px-5 py-4 flex flex-col gap-2">
-
-                                        {/* Riga superiore: titolo + bottone elimina */}
                                         <div className="flex items-start justify-between gap-3">
                                             <span className="text-sm font-bold text-slate-700">
                                                 {scheda.titolo}
@@ -287,22 +334,23 @@ export default function SchedeCoachPage() {
                                                         <AlertTriangle className="w-3 h-3" />
                                                         Sicuro?
                                                     </span>
+
                                                     <button
                                                         onClick={() => handleConfermaElimina(scheda.id)}
                                                         disabled={eliminandoId === scheda.id}
-                                                        className="text-xs font-semibold text-white bg-red-500
-                                                                   hover:bg-red-600 disabled:opacity-50
-                                                                   px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                                                        className="text-xs font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                                                     >
-                                                        {eliminandoId === scheda.id ? 'Eliminazione...' : 'Elimina'}
+                                                        {eliminandoId === scheda.id
+                                                            ? 'Eliminazione...'
+                                                            : 'Elimina'}
                                                     </button>
+
                                                     <button
                                                         onClick={() => {
                                                             setConfermaEliminaId(null);
                                                             setErroreElimina(null);
                                                         }}
-                                                        className="text-xs text-slate-400 hover:text-slate-600
-                                                                   transition-colors cursor-pointer"
+                                                        className="text-xs text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                                                     >
                                                         Annulla
                                                     </button>
@@ -313,8 +361,7 @@ export default function SchedeCoachPage() {
                                                         setConfermaEliminaId(scheda.id);
                                                         setErroreElimina(null);
                                                     }}
-                                                    className="flex items-center gap-1 text-xs text-slate-300
-                                                               hover:text-red-400 transition-colors cursor-pointer shrink-0"
+                                                    className="flex items-center gap-1 text-xs text-slate-300 hover:text-red-400 transition-colors cursor-pointer shrink-0"
                                                     title="Elimina scheda"
                                                 >
                                                     <Trash2 className="w-3.5 h-3.5" />
@@ -322,7 +369,6 @@ export default function SchedeCoachPage() {
                                             )}
                                         </div>
 
-                                        {/* Errore eliminazione */}
                                         {erroreElimina && confermaEliminaId === scheda.id && (
                                             <p className="text-xs text-red-500">{erroreElimina}</p>
                                         )}
@@ -335,26 +381,37 @@ export default function SchedeCoachPage() {
                                             {scheda.note || 'Nessuna nota'}
                                         </span>
 
+                                        <span className="text-xs text-slate-400">
+                                            Data creazione:{' '}
+                                            {scheda.dataCreazione
+                                                ? new Date(scheda.dataCreazione).toLocaleDateString('it-IT')
+                                                : 'Non disponibile'}
+                                        </span>
+
                                         <button
                                             onClick={() => toggleEserciziScheda(scheda.id)}
-                                            className="mt-1 flex items-center gap-1.5 text-xs text-blue-600
-                                                       hover:text-blue-800 transition-colors w-fit cursor-pointer"
+                                            className="mt-1 flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors w-fit cursor-pointer"
                                         >
                                             <ClipboardList className="w-3.5 h-3.5" />
                                             Esercizi della scheda
-                                            {schedaAperta === scheda.id
-                                                ? <ChevronUp className="w-3 h-3" />
-                                                : <ChevronDown className="w-3 h-3" />
-                                            }
+                                            {schedaAperta === scheda.id ? (
+                                                <ChevronUp className="w-3 h-3" />
+                                            ) : (
+                                                <ChevronDown className="w-3 h-3" />
+                                            )}
                                         </button>
                                     </div>
 
                                     {schedaAperta === scheda.id && (
                                         <div className="border-t border-gray-100 bg-slate-50 px-5 py-4 flex flex-col gap-3">
                                             {loadingEserciziMap[scheda.id] ? (
-                                                <p className="text-xs text-gray-400">Caricamento esercizi...</p>
+                                                <p className="text-xs text-gray-400">
+                                                    Caricamento esercizi...
+                                                </p>
                                             ) : (eserciziSchedaMap[scheda.id] ?? []).length === 0 ? (
-                                                <p className="text-xs text-gray-400">Nessun esercizio nella scheda.</p>
+                                                <p className="text-xs text-gray-400">
+                                                    Nessun esercizio nella scheda.
+                                                </p>
                                             ) : (
                                                 <div className="flex flex-col gap-2">
                                                     {(eserciziSchedaMap[scheda.id] ?? []).map((es: any) => (
@@ -366,12 +423,20 @@ export default function SchedeCoachPage() {
                                                                 <span className="text-sm font-semibold text-slate-700">
                                                                     {es.nomeEsercizio}
                                                                 </span>
+
                                                                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                                                                    {es.serie != null && <span>Serie: {es.serie}</span>}
-                                                                    {es.ripetizioni != null && <span>Ripetizioni: {es.ripetizioni}</span>}
+                                                                    {es.serie != null && (
+                                                                        <span>Serie: {es.serie}</span>
+                                                                    )}
+                                                                    {es.ripetizioni != null && (
+                                                                        <span>Ripetizioni: {es.ripetizioni}</span>
+                                                                    )}
                                                                 </div>
+
                                                                 {es.note && (
-                                                                    <p className="text-xs text-slate-400 italic">{es.note}</p>
+                                                                    <p className="text-xs text-slate-400 italic">
+                                                                        {es.note}
+                                                                    </p>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -396,6 +461,7 @@ export default function SchedeCoachPage() {
                                     <UserPlus className="text-emerald-600" />
                                     Crea scheda
                                 </h2>
+
                                 <button
                                     type="button"
                                     onClick={closeModal}
@@ -422,6 +488,7 @@ export default function SchedeCoachPage() {
                                     className="border p-2 rounded-lg text-sm bg-white"
                                 >
                                     <option value="">Seleziona atleta...</option>
+
                                     {utenti.map((utente) => (
                                         <option key={utente.id} value={utente.id}>
                                             {utente.nome} {utente.cognome} (@{utente.username})
@@ -441,11 +508,12 @@ export default function SchedeCoachPage() {
                             <div className="flex flex-col gap-4">
                                 <div className="flex justify-between items-center">
                                     <h3 className="font-semibold">Esercizi</h3>
+
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            setEsercizi([...esercizi, esercizioVuoto(nextId)]);
-                                            setNextId(nextId + 1);
+                                            setEsercizi(prev => [...prev, esercizioVuoto(nextId)]);
+                                            setNextId(prev => prev + 1);
                                         }}
                                         className="text-emerald-700 text-sm font-bold cursor-pointer"
                                     >
@@ -459,14 +527,18 @@ export default function SchedeCoachPage() {
                                         esercizio={ex}
                                         index={i}
                                         onRemove={(id) =>
-                                            setEsercizi(esercizi.length > 1
-                                                ? esercizi.filter(e => e.id !== id)
-                                                : esercizi)
+                                            setEsercizi(prev =>
+                                                prev.length > 1
+                                                    ? prev.filter(e => e.id !== id)
+                                                    : prev
+                                            )
                                         }
                                         onChange={(id, field, value) =>
-                                            setEsercizi(esercizi.map(e =>
-                                                e.id === id ? { ...e, [field]: value } : e
-                                            ))
+                                            setEsercizi(prev =>
+                                                prev.map(e =>
+                                                    e.id === id ? { ...e, [field]: value } : e
+                                                )
+                                            )
                                         }
                                     />
                                 ))}
@@ -479,8 +551,7 @@ export default function SchedeCoachPage() {
                             <button
                                 type="submit"
                                 disabled={salvataggio}
-                                className="bg-emerald-700 hover:bg-emerald-800 text-white py-3 rounded-xl
-                                           font-bold shadow-lg disabled:opacity-50 transition-colors cursor-pointer"
+                                className="bg-emerald-700 hover:bg-emerald-800 text-white py-3 rounded-xl font-bold shadow-lg disabled:opacity-50 transition-colors cursor-pointer"
                             >
                                 {salvataggio ? 'Salvataggio...' : 'Salva scheda'}
                             </button>
