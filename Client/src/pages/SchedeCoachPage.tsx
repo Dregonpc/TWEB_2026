@@ -9,16 +9,7 @@ import {
 } from '../api/allenamentoApi';
 import { getListaUtenti } from '../api/utenteApi';
 import type { SchedaAllenamento, Utente, EsercizioScheda } from '../types';
-import {
-    ClipboardList,
-    Plus,
-    X,
-    Trash2,
-    UserPlus,
-    ChevronDown,
-    ChevronUp,
-    AlertTriangle,
-} from 'lucide-react';
+import {ClipboardList, Plus, X, Trash2, UserPlus, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 
 interface EsercizioSchedaForm {
     id: number;
