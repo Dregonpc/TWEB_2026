@@ -58,7 +58,7 @@ public class LoginController {
         return ResponseEntity.ok("{\"messaggio\": \"Logout effettuato\"}");
     }
 
-    // GET /session - restituisce l'utente loggato (usato da React al caricamento)
+    // GET /session - restituisce l'utente loggato
     @GetMapping
     public ResponseEntity<?> me(HttpServletRequest request) {
         HttpSession session = request.getSession(false);

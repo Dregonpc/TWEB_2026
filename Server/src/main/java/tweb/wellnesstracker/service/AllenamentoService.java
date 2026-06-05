@@ -80,7 +80,7 @@ public class AllenamentoService {
                 .collect(Collectors.toList());
     }
 
-    // Salva scheda di allenamento
+    // Salva scheda allenamento
     public SchedaAllenamento creaScheda(SchedaAllenamento scheda) {
         return schedaRepository.save(scheda);
     }

@@ -174,7 +174,6 @@ public class AllenamentoController {
         if (!"COACH".equals(coachLoggato.getRuolo()))
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"errore\": \"Accesso riservato ai COACH\"}");
 
-        // ?? dobbiamo settare la scheda allenamento oppure è già salvato in esercizio
         return ResponseEntity.ok(allenamentoService.salvaEsercizioScheda(esercizio));
     }
 
