@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { salvaLogBenessere } from '../api/benessereApi';
 import type { LogBenessere } from '../types';
-import { Heart, Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 // ── Sotto-componente: slider con label e valore ───────────────────────────────
 

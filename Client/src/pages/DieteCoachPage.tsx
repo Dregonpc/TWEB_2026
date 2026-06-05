@@ -8,13 +8,7 @@ import {
 } from '../api/dietaApi';
 import { getListaUtenti } from '../api/utenteApi';
 import type { Dieta, Utente } from '../types';
-import {
-    Salad,
-    Plus,
-    X,
-    User,
-    Save
-} from 'lucide-react';
+import {Salad, Plus, X, User, Save} from 'lucide-react';
 
 export default function DieteCoachPage() {
 

@@ -11,15 +11,7 @@ import type {
     Dieta,
     SchedaAllenamento
 } from '../../types';
-import {
-    Dumbbell,
-    Heart,
-    Salad,
-    ChevronRight,
-    Smile,
-    Moon,
-    ClipboardList
-} from 'lucide-react';
+import {Dumbbell, Heart, Salad, ChevronRight, Smile, Moon, ClipboardList} from 'lucide-react';
 import StatCard from '../../components/StatCard';
 
 export default function DashboardUser() {

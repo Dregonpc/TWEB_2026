@@ -5,16 +5,7 @@ import {
 } from '../api/benessereApi';
 import type { LogBenessere, CommentoBenessere } from '../types';
 import CommentoBenessereComponent from './CommentoBenessereComponent';
-import {
-    Heart,
-    MessageCircle,
-    ChevronDown,
-    ChevronUp,
-    Trash2,
-    AlertTriangle,
-} from 'lucide-react';
-
-// ── Props ─────────────────────────────────────────────────────────────────────
+import {Heart, MessageCircle, ChevronDown, ChevronUp, Trash2, AlertTriangle} from 'lucide-react';
 
 interface Props {
     /** Lista log passata dal genitore LogBenesserePage. */
